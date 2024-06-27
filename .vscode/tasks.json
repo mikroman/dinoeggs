@@ -1,0 +1,48 @@
+{
+    "version": "2.0.0",
+    "command": "cmd",
+    "type": "shell",
+    "echoCommand": true,
+    "args": [
+        "/C"
+    ],
+    "tasks": [
+        {
+            "label": "KICK Assemble Source",
+            "type": "shell",
+            "windows": {
+                "command": "java -cp C:\\C64\\tools\\kickassembler\\KickAss.jar kickass.KickAssembler ${fileBasenameNoExtension}.asm -o bin\\${fileBasenameNoExtension}.prg -debugdump -bytedump"
+            }
+        },
+        {
+            "label": "KICK Build & Launch C64debugger",
+            "type": "shell",
+            "windows": {
+                "command": "\"C:\\Users\\Mike\\Desktop\\C64Debug\\C64Debugger-v0.64.58.6\\C64Debugger.exe\" -prg ${fileDirname}\\bin\\${fileBasenameNoExtension}.prg -d64 ${fileDirname}\\bin\\dinoeggs.d64 -debuginfo ${fileDirname}\\bin\\${fileBasenameNoExtension}.dbg -layout 11"
+            },
+            "dependsOn": [
+                "KICK Assemble Source"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "KICK Build & Launch VICE prg",
+            "type": "shell",
+            "windows": {
+                "command": "\"C:\\C64\\tools\\GTK3VICE-3.7-win64\\bin\\x64sc.exe\" -8 ${fileDirname}\\bin\\dinoeggs.d64 ${fileDirname}\\bin\\${fileBasenameNoExtension}.prg"
+            },
+            "dependsOn": [
+                "KICK Assemble Source"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}
