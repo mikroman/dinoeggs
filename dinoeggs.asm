@@ -17,7 +17,7 @@ L_JSR_0816_3441:
 L_JSR_0816_346E:
 L_JSR_0816_349E:
 
-	jmp $7C38
+	jmp L_JMP_7C38_0816
 
 L_JMP_0819_0810:
 
@@ -608,7 +608,7 @@ L_BRS_0B8F_0B8C:
 
 L_BRS_0B96_0B75:
 
-	jsr $7CF1
+	jsr L_JSR_7CF1_0B96
 	inc $4E,X
 	inc $5B,X
 	ldy $4E,X
@@ -1714,7 +1714,7 @@ L_BRS_11AB_11A7:
 
 L_BRS_11B0_119D:
 
-	jsr $7D35
+	jsr L_JSR_7D35_11B0
 
 L_JMP_11B3_11AD:
 
@@ -1741,14 +1741,14 @@ L_BRS_11CA_11CD:
 
 L_BRS_11DA_11E1:
 
-	jsr $7D35
+	jsr L_JSR_7D35_11DA
 	lda $14
 	and #$04
 	beq L_BRS_11DA_11E1
 
 L_BRS_11E3_11E6:
 
-	jsr $7D55
+	jsr L_JSR_7D55_11E3
 	beq L_BRS_11E3_11E6
 	lda #$FB
 	sta $14
@@ -1764,7 +1764,7 @@ L_BRS_11F1_11C2:
 	lda $14
 	and #$08
 	beq L_BRS_1200_11F9
-	jsr $7D55
+	jsr L_JSR_7D55_11FB
 	beq L_BRS_1207_11FE
 
 L_BRS_1200_11F9:
@@ -3504,7 +3504,7 @@ L_BRS_1B1F_1B26:
 	sta $ED
 	ldx #$01
 	lda #$00
-	jsr $7C38
+	jsr L_JSR_7C38_1B2E
 	lda $EE
 	bne L_BRS_1B39_1B33
 	lda #$FF
@@ -3592,6 +3592,9 @@ L_JMP_1BA2_0CC9:
 	eor #$01
 	sta $55,X
 	jmp L_JMP_0C50_1BA8
+
+// 1BAB
+
 	.byte $17,$2F,$47,$5F,$77,$8F,$A7
 
 L_JMP_1BB2_0813:
@@ -3669,6 +3672,9 @@ L_BRS_1C18_1BE0:
 	ldx $EE
 	lda #$00
 	rts
+
+// 1C1D
+
 	.byte $06,$0B,$10,$15
 
 L_JSR_1C21_100B:
@@ -3715,9 +3721,9 @@ L_JSR_1C4D_0A6E:
 	ldx $05
 	beq L_BRS_1C45_1C4F
 	ldy #$0F
-	bne L_BRS_1C47_1C53		// branch always
+	bne L_BRS_1C47_1C53
 
-// $1C55
+// 1C55
 
 	.byte $0E,$0D,$0C,$0E,$0D,$0C,$0E,$0D
 	.byte $0C,$0E,$0D,$0C,$0E,$0D,$0C,$0E
@@ -6159,7 +6165,7 @@ L_BRS_4198_417C:
 	sta $EC
 	lda #$FF
 	sta $DC02                          // Data Direction Register A
-	jsr $7D55
+	jsr L_JSR_7D55_419F
 	beq L_BRS_41AA_41A2
 
 L_BRS_41A4_41B7:
@@ -6292,6 +6298,9 @@ L_BRS_41EC_41E9:
 	.byte $EB,$60,$03,$0A,$11,$13,$16,$17
 	.byte $1F,$23,$25,$28,$29,$2A,$2B,$2C
 	.byte $2D,$2E,$2F
+
+
+
 	pha
 	txa
 	pha
@@ -8742,6 +8751,8 @@ L_JSR_6200_7141:
 L_JSR_6200_7164:
 L_JSR_6200_7171:
 L_JSR_6200_7248:
+L_JSR_6200_7C67:
+L_JSR_6200_7C7D:
 
 	lda $DC04                          // Timer A Low-Byte  (Kernal-IRQ, Tape)
 	adc $DD06                          // Timer B Low-Byte  (RS232)
@@ -9101,7 +9112,7 @@ L_BRS_65A9_65A2:
 	stx $E8
 	ldx #$24
 	jmp L_JMP_632A_65AF
-	.byte $00,$00		// unknown so far
+	.byte $00,$00                 // unknown so far
 
 L_JSR_65B4_6581:
 L_JSR_65B4_6585:
@@ -9317,7 +9328,6 @@ L_BRS_6740_674B:
 	.byte $00,$00,$00,$08,$00,$00,$00,$00
 	.byte $00,$00,$00,$00,$00,$00,$00,$00
 
-	
 	ldx #$00	// or .byte $A2,$00
 
 L_JSR_6762_0A26:
@@ -9704,6 +9714,9 @@ L_JMP_6AC0_6DF1:
 L_JMP_6AC0_6E00:
 L_JMP_6AC0_6E0F:
 L_JMP_6AC0_6F28:
+L_JMP_6AC0_7D73:
+L_JMP_6AC0_7D87:
+L_JMP_6AC0_7D97:
 
 	dex
 	txa
@@ -10361,7 +10374,7 @@ L_JSR_7000_14C8:
 
 	cpx $28
 	bne L_BRS_700A_7002
-	jsr $7DD2
+	jsr L_JSR_7DD2_7004
 	jmp L_JMP_6F2E_7007
 
 L_BRS_700A_7002:
@@ -10384,7 +10397,7 @@ L_JMP_7024_7178:
 	sta $0510,X
 	lda #$04
 	sta $0590,X
-	jmp $7DD2
+	jmp L_JMP_7DD2_702C
 
 L_BRS_702F_7010:
 
@@ -10448,7 +10461,7 @@ L_JMP_707B_7103:
 	lda #$04
 	sta $0590,X
 	jsr L_JSR_62D3_7083
-	jmp $7DD2
+	jmp L_JMP_7DD2_7086
 
 L_BRS_7089_706B:
 L_BRS_7089_7070:
@@ -10460,7 +10473,7 @@ L_BRS_708A_7031:
 	asl
 	bcc L_BRS_7093_708B
 	jsr L_JSR_7116_708D
-	jmp $7DD2
+	jmp L_JMP_7DD2_7090
 
 L_BRS_7093_708B:
 
@@ -10619,7 +10632,7 @@ L_BRS_7141_7146:
 	beq L_BRS_7164_715A
 	lda $22
 
-L_BRS_715E_719D:
+L_BRS_715F_719D_BAD:
 
 	beq L_BRS_7164_715E
 	lda $23
@@ -10674,7 +10687,7 @@ L_BRS_718C_7189:
 	sta $F2
 	sty $F4
 	ldx #$03
-	jmp $7E2B
+	jmp L_JMP_7E2B_7194
 	lda #$04
 	sta $DB00,X
 	inx
@@ -10743,7 +10756,7 @@ L_BRS_71DC_71EF:
 	bne L_BRS_71EE_71E4
 	ldy $0438,X
 	bne L_BRS_71EE_71E9
-	jmp $7E18
+	jmp L_JMP_7E18_71EB
 
 L_BRS_71EE_71DF:
 L_BRS_71EE_71E4:
@@ -10861,7 +10874,7 @@ L_JSR_723B_34DD:
 L_BRS_7273_7299:
 
 	ldx $E4
-	jsr $7C1F
+	jsr L_JSR_7C1F_7275
 	lda $E0
 	sec
 	sbc #$40
@@ -10870,7 +10883,7 @@ L_BRS_7273_7299:
 	sbc #$01
 	sta $E1
 	ldx $E5
-	jsr $7C1F
+	jsr L_JSR_7C1F_7287
 	lda $E0
 	clc
 	adc #$40
@@ -11213,21 +11226,99 @@ L_BRS_72C3_72E6:
 	.byte $45,$45,$AA,$D9,$04,$10,$10,$51
 	.byte $AA,$D9,$04,$10,$10,$14,$AA,$D9
 	.byte $04,$04,$44,$56,$AA,$D9,$04,$22
-	.byte $25,$28,$AA,$DA,$00,$00,$B1,$E0
-	.byte $91,$E2,$C8,$F0,$0A,$98,$29,$07
-	.byte $D0,$F4,$CA,$D0,$F1,$F0,$07,$E6
-	.byte $E1,$E6,$E3,$CA,$D0,$E8,$60,$8D
-	.byte $72,$7C,$A9,$00,$85,$EE,$86,$EC
-	.byte $A9,$14,$85,$EB,$20,$9B,$67,$C6
-	.byte $EB,$30,$44,$05,$ED,$AA,$BD,$10
-	.byte $05,$29,$FC,$D0,$EF,$BD,$00,$05
-	.byte $D0,$EA,$BD,$10,$05,$29,$03,$F0
-	.byte $E3,$BD,$80,$05,$D0,$07,$20,$00
-	.byte $62,$29,$06,$D0,$D7,$BD,$10,$05
-	.byte $09,$00,$9D,$10,$05,$AD,$72,$7C
-	.byte $C9,$10,$D0,$0B,$20,$00,$62,$29
-	.byte $0C,$1D,$10,$05,$9D,$10,$05,$E6
-	.byte $EE,$A5,$EE,$C5,$EC,$D0,$B1,$60
+	.byte $25,$28,$AA,$DA,$00,$00
+
+L_JSR_7C1F_7275:
+L_JSR_7C1F_7287:
+L_BRS_7C1F_7C29:
+L_BRS_7C1F_7C2C:
+L_BRS_7C1F_7C35:
+
+	lda ($E0),Y
+	sta ($E2),Y
+	iny
+	beq L_BRS_7C30_7C24
+	tya
+	and #$07
+	bne L_BRS_7C1F_7C29
+	dex
+	bne L_BRS_7C1F_7C2C
+	beq L_BRS_7C37_7C2E
+
+L_BRS_7C30_7C24:
+
+	inc $E1
+	inc $E3
+	dex
+	bne L_BRS_7C1F_7C35
+
+L_BRS_7C37_7C2E:
+
+	rts
+
+L_JMP_7C38_0816:
+L_JSR_7C38_1B2E:
+
+	sta $7C72
+	lda #$00
+	sta $EE
+	stx $EC
+
+L_BRS_7C41_7C8E:
+
+	lda #$14
+	sta $EB
+
+L_BRS_7C45_7C54:
+L_BRS_7C45_7C59:
+L_BRS_7C45_7C60:
+L_BRS_7C45_7C6C:
+
+	jsr $679B
+	dec $EB
+	bmi L_BRS_7C90_7C4A
+	ora $ED
+	tax
+	lda $0510,X
+	and #$FC
+	bne L_BRS_7C45_7C54
+	lda $0500,X
+	bne L_BRS_7C45_7C59
+	lda $0510,X
+	and #$03
+	beq L_BRS_7C45_7C60
+	lda $0580,X
+	bne L_BRS_7C6E_7C65
+	jsr L_JSR_6200_7C67
+	and #$06
+	bne L_BRS_7C45_7C6C
+
+L_BRS_7C6E_7C65:
+
+	lda $0510,X
+	ora #$00
+	sta $0510,X
+	lda $7C72
+	cmp #$10
+	bne L_BRS_7C88_7C7B
+	jsr L_JSR_6200_7C7D
+	and #$0C
+	ora $0510,X
+	sta $0510,X
+
+L_BRS_7C88_7C7B:
+
+	inc $EE
+	lda $EE
+	cmp $EC
+	bne L_BRS_7C41_7C8E
+
+L_BRS_7C90_7C4A:
+
+	rts
+
+// 7C91
+
 	.byte $70,$70,$70,$70,$03,$0B,$13,$04
 	.byte $0C,$14,$05,$0D,$15,$06,$0E,$16
 	.byte $07,$0F,$17,$18,$20,$28,$19,$21
@@ -11238,88 +11329,281 @@ L_BRS_72C3_72E6:
 	.byte $00,$06,$08,$12,$00,$00,$00,$00
 	.byte $00,$10,$10,$10,$00,$00,$30,$30
 	.byte $30,$00,$00,$50,$50,$50,$00,$00
-	.byte $70,$70,$70,$A0,$00,$38,$C8,$E9
-	.byte $0C,$B0,$FB,$98,$05,$E8,$A8,$60
-	.byte $A8,$88,$B9,$97,$00,$C9,$01,$D0
-	.byte $05,$B9,$AA,$00,$F0,$35,$B5,$5A
-	.byte $4A,$4A,$4A,$4A,$4A,$A8,$B5,$4E
-	.byte $38,$F9,$E1,$6E,$30,$21,$C9,$06
-	.byte $B0,$1D,$84,$E2,$B4,$5A,$B9,$10
-	.byte $05,$29,$03,$F0,$12,$A9,$00,$95
-	.byte $72,$A9,$05,$95,$5B,$A4,$E2,$B9
-	.byte $E1,$6E,$38,$E9,$01,$95,$4E,$F6
-	.byte $4E,$F6,$4E,$60,$A9,$FF,$8D,$02
-	.byte $DC,$A2,$07,$BD,$14,$61,$8D,$00
-	.byte $DC,$AD,$01,$DC,$CD,$01,$DC,$D0
-	.byte $F8,$3D,$1C,$61,$C9,$01,$66,$14
-	.byte $CA,$10,$E8,$60,$A9,$00,$8D,$00
-	.byte $DC,$AD,$01,$DC,$CD,$01,$DC,$D0
-	.byte $F8,$C9,$FF,$60,$60,$B9,$CA,$88
-	.byte $91,$E0,$B9,$E2,$88,$91,$E2,$88
-	.byte $10,$F3,$4C,$C0,$6A,$8A,$4A,$90
-	.byte $10,$B9,$DA,$8A,$91,$E0,$B9,$3A
-	.byte $8B,$91,$E2,$88,$10,$F3,$4C,$C0
-	.byte $6A,$B9,$22,$8B,$91,$E0,$B9,$52
-	.byte $8B,$91,$E2,$88,$10,$F3,$4C,$C0
-	.byte $6A,$00,$67,$67,$67,$00,$67,$6D
-	.byte $6D,$00,$6C,$6C,$6C,$00,$6C,$6C
-	.byte $6C,$00,$6C,$6C,$6C,$00,$6C,$6C
-	.byte $6C,$00,$6C,$6C,$7D,$00,$6B,$00
-	.byte $00,$10,$1D,$30,$3D,$50,$5D,$70
-	.byte $7D,$AA,$AB,$8A,$20,$00,$00,$00
-	.byte $00,$AA,$0E,$AA,$22,$00,$00,$00
-	.byte $00,$A9,$0F,$8D,$18,$D4,$A9,$02
-	.byte $8D,$01,$D4,$A9,$21,$A2,$51,$A0
-	.byte $91,$20,$FD,$7D,$A0,$20,$20,$07
-	.byte $7E,$A9,$08,$8D,$04,$D4,$A9,$31
-	.byte $A4,$CE,$C0,$09,$D0,$02,$A9,$35
-	.byte $8D,$AD,$64,$60,$8D,$04,$D4,$8E
-	.byte $05,$D4,$8C,$06,$D4,$60,$A2,$00
-	.byte $E8,$D0,$FD,$98,$4A,$18,$69,$04
-	.byte $8D,$01,$D4,$88,$D0,$F2,$60,$9D
-	.byte $AF,$02,$A5,$F2,$9D,$0F,$02,$A5
-	.byte $F3,$9D,$37,$02,$A9,$18,$9D,$87
-	.byte $02,$60,$8A,$0A,$A8,$B5,$68,$19
-	.byte $B2,$BF,$D0,$11,$A5,$F2,$95,$60
-	.byte $A5,$F3,$95,$6C,$A5,$F4,$95,$64
-	.byte $A9,$0D,$95,$68,$60,$CA,$10,$E2
-	.byte $60,$80,$90,$A8,$C0,$D8,$F0,$08
-	.byte $20,$38,$50,$68,$80,$98,$B0,$00
-	.byte $00,$A7,$A7,$A7,$A7,$A7,$A7,$A8
-	.byte $A8,$A8,$A8,$A8,$A8,$A8,$A8,$20
-	.byte $20,$C0,$D0,$E8,$00,$18,$30,$48
-	.byte $60,$78,$90,$A8,$C0,$D8,$F0,$00
-	.byte $00,$AD,$AD,$AD,$AE,$AE,$AE,$AE
-	.byte $AE,$AE,$AE,$AE,$AE,$AE,$AE,$20
-	.byte $20,$00,$10,$28,$40,$58,$70,$88
-	.byte $A0,$B8,$D0,$E8,$00,$18,$30,$00
-	.byte $00,$B4,$B4,$B4,$B4,$B4,$B4,$B4
-	.byte $B4,$B4,$B4,$B4,$B5,$B5,$B5,$20
-	.byte $20,$40,$50,$68,$80,$98,$B0,$C8
-	.byte $E0,$F8,$10,$28,$40,$58,$70,$00
-	.byte $00,$BA,$BA,$BA,$BA,$BA,$BA,$BA
-	.byte $BA,$BA,$BB,$BB,$BB,$BB,$BB,$20
-	.byte $20,$C8,$A4,$80,$BF,$0F,$3F,$05
-	.byte $B5,$9F,$9F,$C5,$FF,$94,$F7,$14
-	.byte $77,$04,$DE,$CF,$EF,$4F,$FF,$04
-	.byte $97,$01,$FD,$04,$57,$05,$B5,$0E
-	.byte $2D,$10,$B7,$9D,$FF,$C5,$95,$00
-	.byte $FC,$10,$05,$04,$FF,$05,$5C,$95
-	.byte $FF,$94,$B5,$4F,$B5,$CF,$FF,$FF
-	.byte $EF,$FF,$4F,$FF,$4E,$FF,$40,$FF
-	.byte $B1,$FF,$01,$FF,$FF,$FF,$0E,$FF
-	.byte $4E,$6F,$64,$FF,$45,$FB,$FF,$FF
-	.byte $01,$FF,$FF,$FF,$84,$FF,$FF,$FF
-	.byte $FF,$FF,$42,$FF,$FF,$6E,$EE,$FF
-	.byte $FF,$DF,$7E,$FF,$5C,$FF,$FF,$DF
-	.byte $81,$F5,$FF,$FF,$00,$FF,$48,$FF
-	.byte $B1,$FF,$4F,$FF,$40,$FF,$6F,$FF
-	.byte $A7,$FF,$4F,$FF,$07,$FF,$AF,$DF
-	.byte $99,$FF,$7F,$7F,$FF,$FF,$FF,$FF
-	.byte $4E,$ED,$65,$7F,$45,$FF,$08,$FF
-	.byte $BF,$FF,$75,$FF,$94,$FF,$00,$FF
-	.byte $6D,$FF,$46,$FF,$AE,$DF,$4E,$FF
-	.byte $F3,$FF,$6F,$FF,$00,$FF,$EE,$FF
-	.byte $5F,$EF,$7E,$FF,$00,$FF,$CF,$FF
-	.byte $00,$FF,$6E,$FF,$6E,$FF,$00,$FF
-	.byte $FF,$8D,$00,$64
+	.byte $70,$70,$70,$A0,$00,$38
+
+L_BRS_7CE7_7CEA:
+
+	iny
+	sbc #$0C
+	bcs L_BRS_7CE7_7CEA
+	tya
+	ora $E8
+	tay
+	rts
+
+L_JSR_7CF1_0B96:
+
+	tay
+	dey
+	lda $0097,Y
+	cmp #$01
+	bne L_BRS_7CFF_7CF8
+	lda $00AA,Y
+	beq L_BRS_7D34_7CFD
+
+L_BRS_7CFF_7CF8:
+
+	lda $5A,X
+	lsr
+	lsr
+	lsr
+	lsr
+	lsr
+	tay
+	lda $4E,X
+	sec
+	sbc $6EE1,Y
+	bmi L_BRS_7D30_7D0D
+	cmp #$06
+	bcs L_BRS_7D30_7D11
+	sty $E2
+	ldy $5A,X
+	lda $0510,Y
+	and #$03
+	beq L_BRS_7D30_7D1C
+	lda #$00
+	sta $72,X
+	lda #$05
+	sta $5B,X
+	ldy $E2
+	lda $6EE1,Y
+	sec
+	sbc #$01
+	sta $4E,X
+
+L_BRS_7D30_7D0D:
+L_BRS_7D30_7D11:
+L_BRS_7D30_7D1C:
+
+	inc $4E,X
+	inc $4E,X
+
+L_BRS_7D34_7CFD:
+
+	rts
+
+L_JSR_7D35_11B0:
+L_JSR_7D35_11DA:
+
+	lda #$FF
+	sta $DC02                          // Data Direction Register A
+	ldx #$07
+
+L_BRS_7D3C_7D52:
+
+	lda $6114,X
+	sta $DC00                          // Data Port A (Keyboard, Joystick, Paddles)
+
+L_BRS_7D42_7D48:
+
+	lda $DC01                          // Data Port B (Keyboard, Joystick, Paddles)
+	cmp $DC01                          // Data Port B (Keyboard, Joystick, Paddles)
+	bne L_BRS_7D42_7D48
+	and $611C,X
+	cmp #$01
+	ror $14
+	dex
+	bpl L_BRS_7D3C_7D52
+	rts
+
+L_JSR_7D55_11E3:
+L_JSR_7D55_11FB:
+L_JSR_7D55_419F:
+
+	lda #$00
+	sta $DC00                          // Data Port A (Keyboard, Joystick, Paddles)
+
+L_BRS_7D5A_7D60:
+
+	lda $DC01                          // Data Port B (Keyboard, Joystick, Paddles)
+	cmp $DC01                          // Data Port B (Keyboard, Joystick, Paddles)
+	bne L_BRS_7D5A_7D60
+	cmp #$FF
+	rts
+	rts
+
+L_BRS_7D66_7D71:
+
+	lda $88CA,Y
+	sta ($E0),Y
+	lda $88E2,Y
+	sta ($E2),Y
+	dey
+	bpl L_BRS_7D66_7D71
+	jmp L_JMP_6AC0_7D73
+	txa
+	lsr
+	bcc L_BRS_7D8A_7D78
+
+L_BRS_7D7A_7D85:
+
+	lda $8ADA,Y
+	sta ($E0),Y
+	lda $8B3A,Y
+	sta ($E2),Y
+	dey
+	bpl L_BRS_7D7A_7D85
+	jmp L_JMP_6AC0_7D87
+
+L_BRS_7D8A_7D78:
+L_BRS_7D8A_7D95:
+
+	lda $8B22,Y
+	sta ($E0),Y
+	lda $8B52,Y
+	sta ($E2),Y
+	dey
+	bpl L_BRS_7D8A_7D95
+	jmp L_JMP_6AC0_7D97
+
+// 7D9A
+
+	.byte $00,$67,$67,$67,$00,$67,$6D,$6D
+	.byte $00,$6C,$6C,$6C,$00,$6C,$6C,$6C
+	.byte $00,$6C,$6C,$6C,$00,$6C,$6C,$6C
+	.byte $00,$6C,$6C,$7D,$00,$6B,$00,$00
+	.byte $10,$1D,$30,$3D,$50,$5D,$70,$7D
+	.byte $AA,$AB,$8A,$20,$00,$00,$00,$00
+	.byte $AA,$0E,$AA,$22,$00,$00,$00,$00
+
+L_JSR_7DD2_7004:
+L_JMP_7DD2_702C:
+L_JMP_7DD2_7086:
+L_JMP_7DD2_7090:
+
+	lda #$0F
+	sta $D418                          // Select Filter Mode and Volume
+	lda #$02
+	sta $D401                          // Voice 1: Frequency Control - High-Byte
+	lda #$21
+	ldx #$51
+	ldy #$91
+	jsr L_JSR_7DFD_7DE2
+	ldy #$20
+	jsr L_JSR_7E07_7DE7
+	lda #$08
+	sta $D404                          // Voice 1: Control Register
+	lda #$31
+	ldy $CE
+	cpy #$09
+	bne L_BRS_7DF9_7DF5
+	lda #$35
+
+L_BRS_7DF9_7DF5:
+
+	sta $64AD
+	rts
+
+L_JSR_7DFD_7DE2:
+
+	sta $D404                          // Voice 1: Control Register
+	stx $D405                          // Voice 1: Attack / Decay Cycle Control
+	sty $D406                          // Voice 1: Sustain / Release Cycle Control
+	rts
+
+L_JSR_7E07_7DE7:
+
+	ldx #$00
+
+L_BRS_7E09_7E0A:
+L_BRS_7E09_7E15:
+
+	inx
+	bne L_BRS_7E09_7E0A
+	tya
+	lsr
+	clc
+	adc #$04
+	sta $D401                          // Voice 1: Frequency Control - High-Byte
+	dey
+	bne L_BRS_7E09_7E15
+	rts
+
+L_JMP_7E18_71EB:
+
+	sta $02AF,X
+	lda $F2
+	sta $020F,X
+	lda $F3
+	sta $0237,X
+	lda #$18
+	sta $0287,X
+	rts
+
+L_JMP_7E2B_7194:
+L_BRS_7E2B_7E47:
+
+	txa
+	asl
+	tay
+	lda $68,X
+	ora $BFB2,Y
+	bne L_BRS_7E46_7E33
+	lda $F2
+	sta $60,X
+	lda $F3
+	sta $6C,X
+	lda $F4
+	sta $64,X
+	lda #$0D
+	sta $68,X
+	rts
+
+L_BRS_7E46_7E33:
+
+	dex
+	bpl L_BRS_7E2B_7E47
+	rts
+
+// 7E4A
+
+	.byte $80,$90,$A8,$C0,$D8,$F0,$08,$20
+	.byte $38,$50,$68,$80,$98,$B0,$00,$00
+	.byte $A7,$A7,$A7,$A7,$A7,$A7,$A8,$A8
+	.byte $A8,$A8,$A8,$A8,$A8,$A8,$20,$20
+	.byte $C0,$D0,$E8,$00,$18,$30,$48,$60
+	.byte $78,$90,$A8,$C0,$D8,$F0,$00,$00
+	.byte $AD,$AD,$AD,$AE,$AE,$AE,$AE,$AE
+	.byte $AE,$AE,$AE,$AE,$AE,$AE,$20,$20
+	.byte $00,$10,$28,$40,$58,$70,$88,$A0
+	.byte $B8,$D0,$E8,$00,$18,$30,$00,$00
+	.byte $B4,$B4,$B4,$B4,$B4,$B4,$B4,$B4
+	.byte $B4,$B4,$B4,$B5,$B5,$B5,$20,$20
+	.byte $40,$50,$68,$80,$98,$B0,$C8,$E0
+	.byte $F8,$10,$28,$40,$58,$70,$00,$00
+	.byte $BA,$BA,$BA,$BA,$BA,$BA,$BA,$BA
+	.byte $BA,$BB,$BB,$BB,$BB,$BB,$20,$20
+	.byte $C8,$A4,$80,$BF,$0F,$3F,$05,$B5
+	.byte $9F,$9F,$C5,$FF,$94,$F7,$14,$77
+	.byte $04,$DE,$CF,$EF,$4F,$FF,$04,$97
+	.byte $01,$FD,$04,$57,$05,$B5,$0E,$2D
+	.byte $10,$B7,$9D,$FF,$C5,$95,$00,$FC
+	.byte $10,$05,$04,$FF,$05,$5C,$95,$FF
+	.byte $94,$B5,$4F,$B5,$CF,$FF,$FF,$EF
+	.byte $FF,$4F,$FF,$4E,$FF,$40,$FF,$B1
+	.byte $FF,$01,$FF,$FF,$FF,$0E,$FF,$4E
+	.byte $6F,$64,$FF,$45,$FB,$FF,$FF,$01
+	.byte $FF,$FF,$FF,$84,$FF,$FF,$FF,$FF
+	.byte $FF,$42,$FF,$FF,$6E,$EE,$FF,$FF
+	.byte $DF,$7E,$FF,$5C,$FF,$FF,$DF,$81
+	.byte $F5,$FF,$FF,$00,$FF,$48,$FF,$B1
+	.byte $FF,$4F,$FF,$40,$FF,$6F,$FF,$A7
+	.byte $FF,$4F,$FF,$07,$FF,$AF,$DF,$99
+	.byte $FF,$7F,$7F,$FF,$FF,$FF,$FF,$4E
+	.byte $ED,$65,$7F,$45,$FF,$08,$FF,$BF
+	.byte $FF,$75,$FF,$94,$FF,$00,$FF,$6D
+	.byte $FF,$46,$FF,$AE,$DF,$4E,$FF,$F3
+	.byte $FF,$6F,$FF,$00,$FF,$EE,$FF,$5F
+	.byte $EF,$7E,$FF,$00,$FF,$CF,$FF,$00
+	.byte $FF,$6E,$FF,$6E,$FF,$00,$FF,$FF
+	.byte $8D,$00,$64
