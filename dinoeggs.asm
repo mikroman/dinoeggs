@@ -1,3 +1,5 @@
+.import source "dino_labesl.asm"
+
 // project created by mikroman
 // June 18,2024
 
@@ -21,49 +23,49 @@ L_JSR_0816_349E:
 
 L_JMP_0819_0810:
 
-	jsr $FFE7                         // Close All Channels And Files
+	jsr CLALL                         // Close All Channels And Files
 	lda #$00
-	jsr $FFBD                         // Set Filename
+	jsr SETNAM                         // Set Filename
 	lda #$0F
 	ldx #$08
 	ldy #$0F
-	jsr $FFBA                         // Set Logical File Parameters
-	jsr $FFC0                         // Open Vector
+	jsr SETLFS                         // Set Logical File Parameters
+	jsr OPEN                         // Open Vector
 	lda #$01
 	ldx #$96
 	ldy #$1D
-	jsr $FFBD                         // Set Filename
+	jsr SETNAM                         // Set Filename
 	lda #$05
 	ldx #$08
 	ldy #$05
-	jsr $FFBA                         // Set Logical File Parameters
-	jsr $FFC0                         // Open Vector
+	jsr SETLFS                         // Set Logical File Parameters
+	jsr OPEN                         // Open Vector
 	ldx #$0F
-	jsr $FFC9                         // Set Output
+	jsr CHKOUT                         // Set Output
 	ldx #$00
 
 L_BRS_0849_0852:
 
 	lda $1D97,X
-	jsr $FFD2                         // Output Vector, chrout
+	jsr CHROUT                         // Output Vector, chrout
 	inx
 	cpx #$0C
 	bne L_BRS_0849_0852
-	jsr $FFCC                         // Restore I/O Vector
+	jsr CLRCHN                         // Restore I/O Vector
 	ldx #$0F
-	jsr $FFC6                         // Set Input
+	jsr CHKIN                         // Set Input
 	ldx #$00
-	jsr $FFCF                         // Input Vector, chrin
+	jsr CHRIN                         // Input Vector, chrin
 	cmp #$32
 	bne L_BRS_086C_0863
-	jsr $FFCF                         // Input Vector, chrin
+	jsr CHRIN                         // Input Vector, chrin
 	cmp #$33
 	beq L_BRS_0870_086A
 
 L_BRS_086C_0863:
 
 	sei
-	jmp ($FFFC)
+	jmp (RESET)
 
 L_BRS_0870_086A:
 
@@ -71,13 +73,13 @@ L_BRS_0870_086A:
 
 L_BRS_0872_0876:
 
-	jsr $FFCF                         // Input Vector, chrin
+	jsr CHRIN                         // Input Vector, chrin
 	dex
 	bne L_BRS_0872_0876
 	lda #$05
-	jsr $FFC3                         // Close Vector
+	jsr CLOSE                         // Close Vector
 	lda #$0F
-	jsr $FFC3                         // Close Vector
+	jsr CLOSE                         // Close Vector
 
 start:
 
@@ -1117,7 +1119,7 @@ L_BRS_0E32_0E2B:
 	sec
 	sbc #$08
 	bcc L_BRS_0E6F_0E65
-	jsr $7CE4
+	jsr L_JSR_7CE4_0E67
 	lda #$04
 	sta $0580,Y
 
@@ -1226,7 +1228,7 @@ L_BRS_0EE5_0EDD:
 	sta $E8
 	beq L_BRS_0F0A_0EF8
 	lda $020F,Y
-	jsr $7CE4
+	jsr L_JSR_7CE4_0EFD
 	lda #$04
 	sta $0580,Y
 	ldy $EF
@@ -1500,7 +1502,7 @@ L_BRS_106E_1032:
 
 L_BRS_108F_109A:
 
-	jsr $679B
+	jsr L_JSR_679B_108F
 	ora #$60
 	tax
 	lda $0500,X
@@ -2828,7 +2830,7 @@ L_BRS_176A_175F:
 
 L_BRS_1777_178F:
 
-	jsr $679B
+	jsr L_JSR_679B_1777
 	ora $E0
 	tax
 	lda $0510,X
@@ -3420,7 +3422,7 @@ L_BRS_1AB0_1AF7:
 	tay
 	lda $67B5,Y
 	sta $E4
-	jsr $679B
+	jsr L_JSR_679B_1ABB
 	ora $67B9,Y
 	tay
 	lda $0510,Y
@@ -4588,7 +4590,7 @@ L_BRS_3237_321D:
 	inc $CF
 	beq L_BRS_3246_323F
 	lda #$05
-	jsr $3979
+	jsr L_JSR_3979_3243
 
 L_BRS_3246_3235:
 L_BRS_3246_323F:
@@ -4756,7 +4758,7 @@ L_BRS_3331_3336:
 	beq L_BRS_3331_3336
 	sta $F0
 	sta $F1
-	jsr $679B
+	jsr L_JSR_679B_333C
 	ora #$50
 	tax
 
@@ -4841,7 +4843,7 @@ L_BRS_33B4_3405:
 L_BRS_33BA_33C3:
 L_BRS_33BA_33E0:
 
-	jsr $679B
+	jsr L_JSR_679B_33BA
 	ora $F0
 	tax
 	lda $0510,X
@@ -4900,7 +4902,7 @@ L_BRS_33E7_33F2:
 	bpl L_BRS_33B4_3405
 	lda $0F
 	bne L_BRS_3426_3409
-	jsr $3671
+	jsr L_JSR_3671_340B
 	ldy $CE
 	and $3653,Y
 	bne L_BRS_3419_3413
@@ -4922,7 +4924,7 @@ L_BRS_341B_3417:
 L_BRS_3426_3409:
 L_BRS_3426_3422:
 
-	jsr $3671
+	jsr L_JSR_3671_3426
 	and #$01
 	clc
 	adc #$03
@@ -4962,7 +4964,7 @@ L_BRS_3458_3454:
 
 L_BRS_345D_344D:
 
-	jsr $3671
+	jsr L_JSR_3671_345D
 	and #$03
 	clc
 	ldy $CE
@@ -5004,7 +5006,7 @@ L_BRS_348A_347A:
 L_BRS_3497_34A3:
 L_BRS_3497_34A7:
 
-	jsr $3671
+	jsr L_JSR_3671_3497
 	ldx #$01
 	and #$0C
 	jsr L_JSR_0816_349E
@@ -5110,6 +5112,7 @@ L_BRS_3527_352C:
 	.byte $D0,$FF,$FF,$3F,$D9,$65,$FF,$FF
 	.byte $FC,$DA
 
+L_JSR_3591_397B:
 L_JSR_3591_41BB:
 L_JSR_3591_474A:
 
@@ -5183,7 +5186,7 @@ L_JSR_35D1_3371:
 L_JSR_35D1_3376:
 
 	stx $ED
-	jsr $679B
+	jsr L_JSR_679B_35D3
 	ora $7DBA,X
 	tax
 
@@ -5285,11 +5288,21 @@ L_BRS_3643_3635:
 	.byte $08,$FF,$FF,$FF,$06,$07,$07,$08
 	.byte $08,$09,$09,$0A,$0B,$0B,$02,$03
 	.byte $04,$04,$05,$05,$06,$06,$06,$06
-	.byte $20,$00,$62,$29,$60,$85,$ED,$4C
-	.byte $00,$62,$72,$73,$75,$74,$76,$7A
-	.byte $7D,$77,$72,$78,$75,$74,$10,$10
-	.byte $11,$12,$13,$14,$15,$16,$A0,$A0
-	.byte $A0,$90,$90,$90,$88,$88,$70,$70
+
+L_JSR_3671_340B:
+L_JSR_3671_3426:
+L_JSR_3671_345D:
+L_JSR_3671_3497:
+
+	jsr L_JSR_6200_3671
+	and #$60
+	sta $ED 
+	jmp L_JMP_6200_3678
+
+	.byte $72,$73,$75,$74,$76,$7A,$7D,$77
+	.byte $72,$78,$75,$74,$10,$10,$11,$12
+	.byte $13,$14,$15,$16,$A0,$A0,$A0,$90
+	.byte $90,$90,$88,$88,$70,$70
 
 L_JSR_3699_3302:
 L_JSR_3699_3305:
@@ -5458,7 +5471,7 @@ L_BRS_3773_3770:
 L_JMP_378E_31FD:
 
 	lda #$03
-	jsr $3979
+	jsr L_JSR_3979_3790
 	ldx #$0B
 	jsr L_JSR_6307_3795
 	lda $D0
@@ -5526,7 +5539,7 @@ L_BRS_37D1_37ED:
 	ldy #$4B
 	jsr L_JSR_4719_3804
 	lda #$02
-	jsr $3979
+	jsr L_JSR_3979_3809
 	jsr L_JSR_62CF_380C
 	ldx #$20
 	jsr L_JSR_62F4_3811
@@ -5607,8 +5620,21 @@ L_BRS_3843_3856:
 	.byte $0C,$0F,$0C,$0F,$0F,$00,$82,$AA
 	.byte $00,$C0,$00,$F0,$F0,$00,$AA,$80
 	.byte $28,$0A,$0A,$0A,$28,$A8,$80,$00
-	.byte $A0,$FF,$20,$91,$35,$38,$E9,$01
-	.byte $D0,$F6,$60,$00,$03,$0F,$0F,$0F
+
+
+L_JSR_3979_3243:
+L_JSR_3979_3790:
+L_JSR_3979_3809:
+L_BRS_3979_3981:
+
+	ldy #$FF
+	jsr L_JSR_3591_397B
+	sec 
+	sbc #$01
+	bne L_BRS_3979_3981
+	rts
+
+	.byte $00,$03,$0F,$0F,$0F
 	.byte $00,$80,$AA,$F3,$C3,$03,$F3,$F3
 	.byte $00,$AA,$A0,$CC,$FC,$3C,$0C,$0C
 	.byte $00,$A8,$0A,$C3,$C3,$C3,$FF,$FC
@@ -6146,7 +6172,7 @@ L_BRS_4169_4164:
 	cmp #$08
 	bne L_BRS_4198_417C
 	inc $ED
-	jsr $4415
+	jsr L_JSR_4415_4180
 	beq L_BRS_4196_4183
 	lda $414A
 	clc
@@ -6293,14 +6319,31 @@ L_BRS_41EC_41E9:
 	.byte $08,$08,$08,$08,$08,$08,$08,$08
 	.byte $08,$08,$07,$07,$06,$06,$05,$05
 	.byte $04,$04,$04,$03,$03,$03,$03,$02
-	.byte $02,$02,$01,$A5,$ED,$A2,$10,$DD
-	.byte $24,$44,$F0,$03,$CA,$10,$F8,$86
-	.byte $EB,$60,$03,$0A,$11,$13,$16,$17
-	.byte $1F,$23,$25,$28,$29,$2A,$2B,$2C
-	.byte $2D,$2E,$2F
+	.byte $02,$02,$01
+
+L_JSR_4415_4180:
+
+	lda $ED 
+	ldx #$10
+
+L_BRS_4419_441F:
+
+	cmp $4424,X 
+	beq L_BRS_4421_441C
+	dex 
+	bpl L_BRS_4419_441F
+
+L_BRS_4421_441C:
+
+	stx $EB 
+	rts
 
 
 
+	.byte $03,$0A,$11,$13,$16,$17,$1F,$23
+	.byte $25,$28,$29,$2A,$2B,$2C,$2D,$2E
+	.byte $2F  
+// 4435
 	pha
 	txa
 	pha
@@ -8736,6 +8779,8 @@ L_JSR_6200_34EB:
 L_JSR_6200_35A3:
 L_JSR_6200_35EA:
 L_JSR_6200_35FC:
+L_JSR_6200_3671:
+L_JMP_6200_3678:
 L_JSR_6200_5045:
 L_JSR_6200_5064:
 L_JSR_6200_50EE:
@@ -8747,6 +8792,7 @@ L_JSR_6200_554D:
 L_JSR_6200_5581:
 L_JSR_6200_5651:
 L_JSR_6200_6150:
+L_JSR_6200_679B:
 L_JSR_6200_7141:
 L_JSR_6200_7164:
 L_JSR_6200_7171:
@@ -9361,13 +9407,31 @@ L_JSR_6762_6CE4:
 	lda $6793,Y
 	rts
 
-// 6784
+
 
 	.byte $00,$01,$02,$28,$29,$2A,$50,$51
 	.byte $52,$03,$04,$2B,$2C,$53,$54,$20
-	.byte $80,$D0,$60,$70,$50,$40,$90,$20
-	.byte $00,$62,$29,$0F,$C9,$0C,$B0,$F7
-	.byte $69,$01,$60,$00,$40,$95,$94,$12
+	.byte $80,$D0,$60,$70,$50,$40,$90
+
+L_JSR_679B_108F:
+L_JSR_679B_1777:
+L_JSR_679B_1ABB:
+L_JSR_679B_333C:
+L_JSR_679B_33BA:
+L_JSR_679B_35D3:
+L_BRS_679B_67A2:
+L_JSR_679B_7C45:
+
+	jsr L_JSR_6200_679B
+	and #$0F
+	cmp #$0C
+	bcs L_BRS_679B_67A2
+	adc #$01
+	rts
+
+
+
+	.byte $00,$40,$95,$94,$12
 	.byte $50,$D0,$22,$60,$E8,$28,$70,$F0
 	.byte $F8,$05,$0A,$0F,$14,$00,$20,$40
 	.byte $60,$FA,$94,$22,$95,$4A,$95,$72
@@ -10688,16 +10752,22 @@ L_BRS_718C_7189:
 	sty $F4
 	ldx #$03
 	jmp L_JMP_7E2B_7194
+
+// #####################################
+// NEVER EXECUTES
+
 	lda #$04
 	sta $DB00,X
 	inx
-//	bne L_BRS_715F_719D	#### BUG
-	bne $715F
+	bne L_BRS_715F_719D_BAD// + 1
 	rts
+
 	cpx #$0B
 	beq L_BRS_71BC_71A2
 	ldy $04FC
 	cpy #$16
+// #####################################
+
 
 L_JSR_71A9_0F81:
 L_JSR_71A9_0F90:
@@ -11274,7 +11344,7 @@ L_BRS_7C45_7C59:
 L_BRS_7C45_7C60:
 L_BRS_7C45_7C6C:
 
-	jsr $679B
+	jsr L_JSR_679B_7C45
 	dec $EB
 	bmi L_BRS_7C90_7C4A
 	ora $ED
@@ -11329,7 +11399,13 @@ L_BRS_7C90_7C4A:
 	.byte $00,$06,$08,$12,$00,$00,$00,$00
 	.byte $00,$10,$10,$10,$00,$00,$30,$30
 	.byte $30,$00,$00,$50,$50,$50,$00,$00
-	.byte $70,$70,$70,$A0,$00,$38
+	.byte $70,$70,$70
+	
+L_JSR_7CE4_0E67:
+L_JSR_7CE4_0EFD:
+
+	ldy #$00
+	sec     
 
 L_BRS_7CE7_7CEA:
 
