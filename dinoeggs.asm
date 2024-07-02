@@ -3,11 +3,11 @@
 // project created by mikroman
 // June 18,2024
 
-BasicUpstart2(start)
+BasicUpstart2(start)	// SYS2178 ($0882)
 
 * = $0810
 
-	jmp L_JMP_0819_0810
+	jmp L_JMP_0819_0810	// Never executed
 
 L_JSR_0813_50AD:
 L_JSR_0813_5422:
@@ -15,64 +15,57 @@ L_JSR_0813_5422:
 	jmp L_JMP_1BB2_0813
 
 L_JSR_0816_341D:
+
 L_JSR_0816_3441:
 L_JSR_0816_346E:
 L_JSR_0816_349E:
 
 	jmp L_JMP_7C38_0816
 
-L_JMP_0819_0810:
-
-	jsr CLALL                         // Close All Channels And Files
+// #############################################################################
+L_JMP_0819_0810:	// NOT performed. Disk protection check
+	jsr CLALL			// Close All Channels And Files
 	lda #$00
-	jsr SETNAM                         // Set Filename
+	jsr SETNAM		// Set Filename
 	lda #$0F
 	ldx #$08
 	ldy #$0F
-	jsr SETLFS                         // Set Logical File Parameters
-	jsr OPEN                         // Open Vector
+	jsr SETLFS		// Set Logical File Parameters
+	jsr OPEN			// Open Channel
 	lda #$01
 	ldx #$96
 	ldy #$1D
-	jsr SETNAM                         // Set Filename
+	jsr SETNAM		// Set Filename
 	lda #$05
 	ldx #$08
 	ldy #$05
-	jsr SETLFS                         // Set Logical File Parameters
-	jsr OPEN                         // Open Vector
+	jsr SETLFS		// Set Logical File Parameters
+	jsr OPEN			// Open Vector
 	ldx #$0F
-	jsr CHKOUT                         // Set Output
+	jsr CHKOUT		// Set Output
 	ldx #$00
-
 L_BRS_0849_0852:
-
 	lda $1D97,X
-	jsr CHROUT                         // Output Vector, chrout
+	jsr CHROUT		// Output Vector, chrout
 	inx
 	cpx #$0C
 	bne L_BRS_0849_0852
-	jsr CLRCHN                         // Restore I/O Vector
+	jsr CLRCHN		// Restore I/O Vector
 	ldx #$0F
-	jsr CHKIN                         // Set Input
+	jsr CHKIN			// Set Input
 	ldx #$00
-	jsr CHRIN                         // Input Vector, chrin
+	jsr CHRIN			// Input Vector, chrin
 	cmp #$32
 	bne L_BRS_086C_0863
-	jsr CHRIN                         // Input Vector, chrin
+	jsr CHRIN			// Input Vector, chrin
 	cmp #$33
 	beq L_BRS_0870_086A
-
 L_BRS_086C_0863:
-
 	sei
 	jmp (RESET)
-
 L_BRS_0870_086A:
-
 	ldx #$14
-
 L_BRS_0872_0876:
-
 	jsr CHRIN                         // Input Vector, chrin
 	dex
 	bne L_BRS_0872_0876
@@ -81,7 +74,7 @@ L_BRS_0872_0876:
 	lda #$0F
 	jsr CLOSE                         // Close Vector
 
-start:
+start:			// $0882
 
 	sei
 	ldx #$1E
@@ -9373,8 +9366,7 @@ L_BRS_6740_674B:
 
 	.byte $00,$00,$00,$08,$00,$00,$00,$00
 	.byte $00,$00,$00,$00,$00,$00,$00,$00
-
-	ldx #$00	// or .byte $A2,$00
+	.byte $A2,$00// or ldx #$00
 
 L_JSR_6762_0A26:
 L_JSR_6762_0E03:
