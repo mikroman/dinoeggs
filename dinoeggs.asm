@@ -1,29 +1,35 @@
-.import source "dino_labesl.asm"
-
 // project created by mikroman
 // June 18,2024
 
+.import source "dino_labels.asm"
+
+//#define read_error	// uncomment for read_error build
+#define no_error		// comment for read_error build
+
+#if read_error
+BasicUpstart2(error)	// SYS2064 ($0810)
+#elif no_error
 BasicUpstart2(start)	// SYS2178 ($0882)
+#endif
+* = $0810 "read_error"
+error:
 
-* = $0810
-
-	jmp L_JMP_0819_0810	// Never executed
+	jmp L_JMP_0819_0810		// Do Read Error check/continue or reset
 
 L_JSR_0813_50AD:
 L_JSR_0813_5422:
 
-	jmp L_JMP_1BB2_0813
+	jmp L_JMP_1BB2_0813		// 
 
 L_JSR_0816_341D:
-
 L_JSR_0816_3441:
 L_JSR_0816_346E:
 L_JSR_0816_349E:
 
-	jmp L_JMP_7C38_0816
+	jmp L_JMP_7C38_0816		// 
 
 // #############################################################################
-L_JMP_0819_0810:	// NOT performed. Disk protection check
+L_JMP_0819_0810:	// Disk protection check
 	jsr CLALL			// Close All Channels And Files
 	lda #$00
 	jsr SETNAM		// Set Filename
@@ -44,7 +50,7 @@ L_JMP_0819_0810:	// NOT performed. Disk protection check
 	ldx #$0F
 	jsr CHKOUT		// Set Output
 	ldx #$00
-L_BRS_0849_0852:
+L_BRS_0849_0852:	// perform Block Read (U1) of T,S = 18,18 to look for a checksum error
 	lda $1D97,X
 	jsr CHROUT		// Output Vector, chrout
 	inx
@@ -73,8 +79,8 @@ L_BRS_0872_0876:
 	jsr CLOSE                         // Close Vector
 	lda #$0F
 	jsr CLOSE                         // Close Vector
-
-start:			// $0882
+	
+start:	// $0882 Skip the disk error check - come here instead
 
 	sei
 	ldx #$1E
@@ -125,7 +131,6 @@ L_BRS_08C0_08D5:
 	ldx #$07
 
 L_BRS_08DC_08E9:
-
 	lda $1C92,X
 	sta $CFE0,X
 	lda $1C9A,X
@@ -3880,9 +3885,9 @@ L_JSR_1D7D_0CEB:
 
 // 1D95
 
-	.byte $00,$23,$55,$31,$3A,$35,$2C,$30
-	.byte $2C,$31,$38,$2C,$31,$38,$2C,$31
-	.byte $38,$FF,$7D,$06,$05,$20,$A7,$04
+	.byte $00,$23,$55,$31,$3A,$35,$2C,$30	// $00,$23,U1:5,0	channel,drive
+	.byte $2C,$31,$38,$2C,$31,$38,$2C,$31	// ,18,18,1	t,s=18,18
+	.byte $38,$FF,$7D,$06,$05,$20,$A7,$04	// 8
 	.byte $EF,$00,$5F,$25,$FF,$0E,$00,$04
 	.byte $FF,$04,$DF,$B5,$5E,$91,$B5,$2F
 	.byte $7F,$0F,$95,$45,$FD,$07,$BD,$04
