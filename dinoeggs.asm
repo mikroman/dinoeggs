@@ -1,17 +1,21 @@
 // project created by mikroman
 // June 18,2024
 
-.import source "dino_labels.asm"
 
-//#define read_error	// uncomment for read_error build
-#define no_error		// comment for read_error build
+.import source "dino_labels.asm"
+#define no_error		// comment this line for read_error build
+//#define read_error	// uncomment this line for read_error build
 
 #if read_error
 BasicUpstart2(error)	// SYS2064 ($0810)
+
 #elif no_error
 BasicUpstart2(start)	// SYS2178 ($0882)
+
 #endif
+
 * = $0810 "read_error"
+
 error:
 
 	jmp L_JMP_0819_0810		// Do Read Error check/continue or reset
@@ -19,17 +23,17 @@ error:
 L_JSR_0813_50AD:
 L_JSR_0813_5422:
 
-	jmp L_JMP_1BB2_0813		// 
+	jmp L_JMP_1BB2_0813		//
 
 L_JSR_0816_341D:
 L_JSR_0816_3441:
 L_JSR_0816_346E:
 L_JSR_0816_349E:
 
-	jmp L_JMP_7C38_0816		// 
+	jmp L_JMP_7C38_0816		//
 
-// #############################################################################
 L_JMP_0819_0810:	// Disk protection check
+
 	jsr CLALL			// Close All Channels And Files
 	lda #$00
 	jsr SETNAM		// Set Filename
@@ -50,7 +54,9 @@ L_JMP_0819_0810:	// Disk protection check
 	ldx #$0F
 	jsr CHKOUT		// Set Output
 	ldx #$00
+
 L_BRS_0849_0852:	// perform Block Read (U1) of T,S = 18,18 to look for a checksum error
+
 	lda $1D97,X
 	jsr CHROUT		// Output Vector, chrout
 	inx
@@ -66,12 +72,18 @@ L_BRS_0849_0852:	// perform Block Read (U1) of T,S = 18,18 to look for a checksu
 	jsr CHRIN			// Input Vector, chrin
 	cmp #$33
 	beq L_BRS_0870_086A
+
 L_BRS_086C_0863:
+
 	sei
 	jmp (RESET)
+
 L_BRS_0870_086A:
+
 	ldx #$14
+
 L_BRS_0872_0876:
+
 	jsr CHRIN                         // Input Vector, chrin
 	dex
 	bne L_BRS_0872_0876
@@ -79,8 +91,8 @@ L_BRS_0872_0876:
 	jsr CLOSE                         // Close Vector
 	lda #$0F
 	jsr CLOSE                         // Close Vector
-	
-start:	// $0882 Skip the disk error check - come here instead
+
+start:	// 10 SYS2178 entry: skip disk error check
 
 	sei
 	ldx #$1E
@@ -88,7 +100,7 @@ start:	// $0882 Skip the disk error check - come here instead
 L_BRS_0885_088C:
 
 	lda $6060,X
-	sta $D010,X                          // Sprites 0-7 MSB of X coordinate
+	sta MSIGX,X		// Sprites 0-7 MSB of X coordinate
 	dex
 	bpl L_BRS_0885_088C
 	ldx #$0F
@@ -96,9 +108,9 @@ L_BRS_0885_088C:
 L_BRS_0890_089D:
 
 	lda $60C2,X
-	sta $DC00,X                          // Data Port A (Keyboard, Joystick, Paddles)
+	sta D1PRA,X                          // Data Port A (Keyboard, Joystick, Paddles)
 	lda $60D2,X
-	sta $DD00,X                          // Data Port A (Serial Bus, RS232, VIC Base Mem.)
+	sta D2PRA,X                          // Data Port A (Serial Bus, RS232, VIC Base Mem.)
 	dex
 	bpl L_BRS_0890_089D
 	lda #$00
@@ -110,7 +122,7 @@ L_BRS_0890_089D:
 	lda #$1C
 	sta $FFFB
 	lda #$95
-	sta $DD00                          // Data Port A (Serial Bus, RS232, VIC Base Mem.)
+	sta D2PRA                          // Data Port A (Serial Bus, RS232, VIC Base Mem.)
 	sta $0203
 	lda #$19
 	sta $01
@@ -118,13 +130,13 @@ L_BRS_0890_089D:
 
 L_BRS_08C0_08D5:
 
-	lda $D000,X                          // Sprite 0 X Pos
+	lda SP0X,X                          // Sprite 0 X Pos
 	sta $CE00,X
 	lda $D100,X
 	sta $CF00,X
 	lda #$00
 	sta $0400,X
-	sta $D400,X                          // Voice 1: Frequency Control - Low-Byte
+	sta FRELO1,X                          // Voice 1: Frequency Control - Low-Byte
 	inx
 	bne L_BRS_08C0_08D5
 	dec $0400
@@ -138,9 +150,9 @@ L_BRS_08DC_08E9:
 	dex
 	bpl L_BRS_08DC_08E9
 	lda #$0F
-	sta $D418                          // Select Filter Mode and Volume
+	sta SIGVOL                          // Select Filter Mode and Volume
 	lda #$08
-	sta $D404                          // Voice 1: Control Register
+	sta VCREG1                          // Voice 1: Control Register
 	lda #$1D
 	sta $01
 	ldx #$02
@@ -245,12 +257,12 @@ L_BRS_098E_098B:
 	cli
 	jsr L_JSR_3200_098F
 	lda #$03
-	sta $D01C                          // Sprites Multi-Color Mode Select
+	sta SPMC                          // Sprites Multi-Color Mode Select
 	lda #$06
-	sta $D027                          // Sprite 0 Color
-	sta $D028                          // Sprite 1 Color
+	sta SP0COL                          // Sprite 0 Color
+	sta SP1COL                          // Sprite 1 Color
 	lda #$FF
-	sta $D015                          // Sprite display Enable
+	sta SPENA                          // Sprite display Enable
 
 L_JMP_09A4_1738:
 
@@ -552,8 +564,8 @@ L_BRS_0B2B_0AF9:
 	dec $4F,X
 	bmi L_BRS_0B6C_0B40
 	lda #$00
-	sta $D401                          // Voice 1: Frequency Control - High-Byte
-	sta $D404                          // Voice 1: Control Register
+	sta FREHI1                          // Voice 1: Frequency Control - High-Byte
+	sta VCREG1                          // Voice 1: Control Register
 	ldy $02D7
 	inc $02D7
 	lda $7CCA,Y
@@ -977,16 +989,16 @@ L_BRS_0D70_0D6C:
 	ora #$E0
 	sta $E1
 	lda #$11
-	sta $D404                          // Voice 1: Control Register
+	sta VCREG1                          // Voice 1: Control Register
 
 L_BRS_0D94_0DAC:
 
 	lda $E1
-	sta $D401                          // Voice 1: Frequency Control - High-Byte
+	sta FREHI1                          // Voice 1: Frequency Control - High-Byte
 	lda #$00
-	sta $D405                          // Voice 1: Attack / Decay Cycle Control
+	sta ATDCY1                          // Voice 1: Attack / Decay Cycle Control
 	lda #$E0
-	sta $D406                          // Voice 1: Sustain / Release Cycle Control
+	sta SUREL1                          // Voice 1: Sustain / Release Cycle Control
 	ldx #$00
 
 L_BRS_0DA5_0DA6:
@@ -997,7 +1009,7 @@ L_BRS_0DA5_0DA6:
 	dec $E0
 	bpl L_BRS_0D94_0DAC
 	ldy #$00
-	sty $D404                          // Voice 1: Control Register
+	sty VCREG1                          // Voice 1: Control Register
 	ldx $EF
 
 L_BRS_0DB5_0D7B:
@@ -1361,24 +1373,24 @@ L_JMP_0FB4_0EC8:
 	dec $B3
 	bne L_BRS_0FCD_0FBD
 	lda #$00
-	sta $D401                          // Voice 1: Frequency Control - High-Byte
-	sta $D403                          // Voice 1: Pulse Waveform Width - High-Nybble
-	sta $D404                          // Voice 1: Control Register
+	sta FREHI1                          // Voice 1: Frequency Control - High-Byte
+	sta PWHI1                          // Voice 1: Pulse Waveform Width - High-Nybble
+	sta VCREG1                          // Voice 1: Control Register
 	jmp L_JMP_0FE8_0FCA
 
 L_BRS_0FCD_0FBD:
 
-	sta $D401                          // Voice 1: Frequency Control - High-Byte
-	lda $D403                          // Voice 1: Pulse Waveform Width - High-Nybble
+	sta FREHI1                          // Voice 1: Frequency Control - High-Byte
+	lda PWHI1                          // Voice 1: Pulse Waveform Width - High-Nybble
 	clc
 	adc #$08
-	sta $D403                          // Voice 1: Pulse Waveform Width - High-Nybble
+	sta PWHI1                          // Voice 1: Pulse Waveform Width - High-Nybble
 	lda #$00
-	sta $D405                          // Voice 1: Attack / Decay Cycle Control
+	sta ATDCY1                          // Voice 1: Attack / Decay Cycle Control
 	lda #$E1
-	sta $D406                          // Voice 1: Sustain / Release Cycle Control
+	sta SUREL1                          // Voice 1: Sustain / Release Cycle Control
 	ldy #$81
-	sty $D404                          // Voice 1: Control Register
+	sty VCREG1                          // Voice 1: Control Register
 
 L_JMP_0FE8_0AC4:
 L_BRS_0FE8_0FB9:
@@ -1692,9 +1704,9 @@ L_BRS_1189_117F:
 	lda $14
 	sta $020E
 	ldx #$00
-	stx $DC02                          // Data Direction Register A
-	stx $DC03                          // Data Direction Register B
-	lda $DC00                          // Data Port A (Keyboard, Joystick, Paddles)
+	stx D1DDRA                          // Data Direction Register A
+	stx D1DDRB                          // Data Direction Register B
+	lda D1PRA                          // Data Port A (Keyboard, Joystick, Paddles)
 	and #$1F
 	cmp #$1F
 	beq L_BRS_11B0_119D
@@ -1735,9 +1747,9 @@ L_BRS_11CA_11CD:
 	cmp $0201
 	bne L_BRS_11CA_11CD
 	lda #$88
-	sta $D404                          // Voice 1: Control Register
-	sta $D40B                          // Voice 2: Control Register
-	sta $D412                          // Voice 3: Control Register
+	sta VCREG1                          // Voice 1: Control Register
+	sta VCREG2                          // Voice 2: Control Register
+	sta VCREG3                          // Voice 3: Control Register
 
 L_BRS_11DA_11E1:
 
@@ -1918,7 +1930,7 @@ L_BRS_12BE_12B1:
 	ldy #$00
 	sty $B1
 	lda #$7F
-	bit $DC06                          // Timer B Low-Byte  (Tape, Serial Port)
+	bit D1T2L                          // Timer B Low-Byte  (Tape, Serial Port)
 	bvc L_BRS_12CF_12CB
 	lda #$BF
 
@@ -1965,10 +1977,10 @@ L_BRS_1300_12FC:
 	cpx #$04
 	bne L_BRS_1311_1302
 	lda #$01
-	sta $D027                          // Sprite 0 Color
-	sta $D028                          // Sprite 1 Color
+	sta SP0COL                          // Sprite 0 Color
+	sta SP1COL                          // Sprite 1 Color
 	lda #$00
-	sta $D01C                          // Sprites Multi-Color Mode Select
+	sta SPMC                          // Sprites Multi-Color Mode Select
 
 L_BRS_1311_1302:
 
@@ -2547,10 +2559,10 @@ L_JMP_15E3_1368:
 	lda $20
 	and #$01
 	bne L_BRS_1610_15F4
-	sta $D408                          // Voice 2: Frequency Control - High-Byte
+	sta FREHI2                          // Voice 2: Frequency Control - High-Byte
 	jsr L_JSR_6200_15F9
 	and #$0F
-	sta $D40F                          // Voice 3: Frequency Control - High-Byte
+	sta FREHI3                          // Voice 3: Frequency Control - High-Byte
 	ldy #$E0
 	lda $13
 	bne L_BRS_1609_1605
@@ -2685,7 +2697,7 @@ L_BRS_16AD_1680:
 	asl
 	clc
 	adc #$12
-	sta $D000                          // Sprite 0 X Pos
+	sta SP0X                          // Sprite 0 X Pos
 	cpy #$9B
 	bcc L_BRS_16BE_16B9
 	adc #$BE
@@ -2694,8 +2706,8 @@ L_BRS_16AD_1680:
 L_BRS_16BE_16B9:
 
 	lda #$00
-	sta $D002                          // Sprite 1 X Pos
-	lda $D010                          // Sprites 0-7 MSB of X coordinate
+	sta SP1X                          // Sprite 1 X Pos
+	lda MSIGX                          // Sprites 0-7 MSB of X coordinate
 	and #$FC
 	cpy #$77
 	bcc L_BRS_16CE_16CA
@@ -2703,7 +2715,7 @@ L_BRS_16BE_16B9:
 
 L_BRS_16CE_16CA:
 
-	sta $D010                          // Sprites 0-7 MSB of X coordinate
+	sta MSIGX                          // Sprites 0-7 MSB of X coordinate
 	lda #$00
 	bit $DE
 	bmi L_BRS_16DE_16D5
@@ -2715,8 +2727,8 @@ L_BRS_16CE_16CA:
 L_BRS_16DE_16D5:
 L_BRS_16DE_16D9:
 
-	sta $D001                          // Sprite 0 Y Pos
-	sta $D003                          // Sprite 1 Y Pos
+	sta SP0Y                          // Sprite 0 Y Pos
+	sta SP1Y                          // Sprite 1 Y Pos
 	ldx #$04
 
 L_BRS_16E6_1716:
@@ -2741,10 +2753,10 @@ L_BRS_16FA_16E8:
 L_BRS_16FA_16F2:
 
 	lda #$00
-	sta $D005,X                          // Sprite 2 Y Pos
+	sta SP2Y,X                          // Sprite 2 Y Pos
 	lda $48,X
-	sta $D004,X                          // Sprite 2 X Pos
-	lda $D010                          // Sprites 0-7 MSB of X coordinate
+	sta SP2X,X                          // Sprite 2 X Pos
+	lda MSIGX                          // Sprites 0-7 MSB of X coordinate
 	and $68BB,X
 	ldy $49,X
 	beq L_BRS_1711_170C
@@ -2752,7 +2764,7 @@ L_BRS_16FA_16F2:
 
 L_BRS_1711_170C:
 
-	sta $D010                          // Sprites 0-7 MSB of X coordinate
+	sta MSIGX                          // Sprites 0-7 MSB of X coordinate
 	dex
 	dex
 	bpl L_BRS_16E6_1716
@@ -2897,7 +2909,7 @@ L_BRS_17CD_17D9:
 	and #$07
 	tax
 	lda $1C8A,X
-	sta $D029,Y                          // Sprite 2 Color
+	sta SP2COL,Y                          // Sprite 2 Color
 	ldx #$0F
 	jsr L_JSR_6307_17F2
 
@@ -2988,8 +3000,8 @@ L_BRS_1865_1855:
 	dec $11
 	bne L_BRS_18C3_186B
 	lda #$00
-	sta $D40F                          // Voice 3: Frequency Control - High-Byte
-	sta $D412                          // Voice 3: Control Register
+	sta FREHI3                          // Voice 3: Frequency Control - High-Byte
+	sta VCREG3                          // Voice 3: Control Register
 	inc $D0
 	lda $D0
 	cmp #$03
@@ -3239,7 +3251,7 @@ L_BRS_1999_1994:
 	ldx $20
 	stx $0200
 	lda #$00
-	sta $D408                          // Voice 2: Frequency Control - High-Byte
+	sta FREHI2                          // Voice 2: Frequency Control - High-Byte
 	jmp L_JMP_1A3A_19CC
 
 L_BRS_19CF_19C0:
@@ -3260,7 +3272,7 @@ L_BRS_19CF_19C0:
 	lsr
 	clc
 	adc #$10
-	sta $D408                          // Voice 2: Frequency Control - High-Byte
+	sta FREHI2                          // Voice 2: Frequency Control - High-Byte
 	jmp L_JMP_1A1C_19E6
 
 L_BRS_19E9_19AB:
@@ -3294,7 +3306,7 @@ L_BRS_1A0B_1A04:
 	ora $2A
 	bne L_BRS_1A3A_1A15
 	lda #$13
-	sta $D408                          // Voice 2: Frequency Control - High-Byte
+	sta FREHI2                          // Voice 2: Frequency Control - High-Byte
 
 L_JMP_1A1C_19E6:
 
@@ -3302,9 +3314,9 @@ L_JMP_1A1C_19E6:
 	ldx #$20
 	ldy #$E1
 	sty $E0
-	stx $D40C                          // Voice 2: Attack / Decay Cycle Control
-	sty $D40D                          // Voice 2: Sustain / Release Cycle Control
-	sta $D40B                          // Voice 2: Control Register
+	stx ATDCY2                          // Voice 2: Attack / Decay Cycle Control
+	sty SUREL2                          // Voice 2: Sustain / Release Cycle Control
+	sta VCREG2                          // Voice 2: Control Register
 	ldy #$14
 
 L_BRS_1A2F_1A30:
@@ -3315,7 +3327,7 @@ L_BRS_1A2F_1A33:
 	dey
 	bne L_BRS_1A2F_1A33
 	lda #$00
-	sta $D40B                          // Voice 2: Control Register
+	sta VCREG2                          // Voice 2: Control Register
 
 L_JMP_1A3A_19CC:
 L_BRS_1A3A_1A15:
@@ -3760,11 +3772,11 @@ L_JSR_1CC1_13A1:
 L_JSR_1CC1_1470:
 
 	lda #$F0
-	sta $D414                          // Voice 3: Sustain / Release Cycle Control
+	sta SUREL3                          // Voice 3: Sustain / Release Cycle Control
 	lda #$00
-	sta $D412                          // Voice 3: Control Register
+	sta VCREG3                          // Voice 3: Control Register
 	lda #$12
-	sta $D40F                          // Voice 3: Frequency Control - High-Byte
+	sta FREHI3                          // Voice 3: Frequency Control - High-Byte
 	lda #$21
 	ldx #$11
 	ldy #$A0
@@ -3782,12 +3794,12 @@ L_BRS_1CDD_1CEA:
 	asl
 	clc
 	adc #$20
-	sta $D40F                          // Voice 3: Frequency Control - High-Byte
+	sta FREHI3                          // Voice 3: Frequency Control - High-Byte
 	dey
 	bne L_BRS_1CDD_1CEA
 	ldy #$00
-	sty $D412                          // Voice 3: Control Register
-	sty $D40F                          // Voice 3: Frequency Control - High-Byte
+	sty VCREG3                          // Voice 3: Control Register
+	sty FREHI3                          // Voice 3: Frequency Control - High-Byte
 	rts
 
 L_JSR_1CF5_1365:
@@ -3795,7 +3807,7 @@ L_JSR_1CF5_1365:
 	jsr L_JSR_6200_1CF5
 	and #$07
 	ora #$20
-	sta $D40F                          // Voice 3: Frequency Control - High-Byte
+	sta FREHI3                          // Voice 3: Frequency Control - High-Byte
 	ldy #$00
 	lda #$08
 	ldx $2A
@@ -3810,9 +3822,9 @@ L_BRS_1D0B_1D05:
 L_JSR_1D0D_160D:
 L_JSR_1D0D_1CD6:
 
-	stx $D413                          // Voice 3: Attack / Decay Cycle Control
-	sty $D414                          // Voice 3: Sustain / Release Cycle Control
-	sta $D412                          // Voice 3: Control Register
+	stx ATDCY3                          // Voice 3: Attack / Decay Cycle Control
+	sty SUREL3                          // Voice 3: Sustain / Release Cycle Control
+	sta VCREG3                          // Voice 3: Control Register
 	rts
 
 L_JSR_1D17_157D:
@@ -3829,13 +3841,13 @@ L_JSR_1D17_157D:
 	clc
 	adc $1D65,Y
 	sta $E2
-	sta $D40F                          // Voice 3: Frequency Control - High-Byte
+	sta FREHI3                          // Voice 3: Frequency Control - High-Byte
 	lda $1D6D,Y
-	sta $D412                          // Voice 3: Control Register
+	sta VCREG3                          // Voice 3: Control Register
 	lda $1D75,Y
-	sta $D413                          // Voice 3: Attack / Decay Cycle Control
+	sta ATDCY3                          // Voice 3: Attack / Decay Cycle Control
 	lda #$F1
-	sta $D414                          // Voice 3: Sustain / Release Cycle Control
+	sta SUREL3                          // Voice 3: Sustain / Release Cycle Control
 	lda $E1
 	asl
 	asl
@@ -3854,12 +3866,12 @@ L_BRS_1D46_1D58:
 	and #$1F
 	eor $E2
 	sta $E2
-	sta $D40F                          // Voice 3: Frequency Control - High-Byte
+	sta FREHI3                          // Voice 3: Frequency Control - High-Byte
 	dey
 	bne L_BRS_1D46_1D58
 	lda #$00
-	sta $D412                          // Voice 3: Control Register
-	sta $D414                          // Voice 3: Sustain / Release Cycle Control
+	sta VCREG3                          // Voice 3: Control Register
+	sta SUREL3                          // Voice 3: Sustain / Release Cycle Control
 	ldx $E0
 	rts
 
@@ -3874,13 +3886,13 @@ L_JSR_1D7D_0CEB:
 	eor #$07
 	asl
 	ora #$40
-	sta $D401                          // Voice 1: Frequency Control - High-Byte
+	sta FREHI1                          // Voice 1: Frequency Control - High-Byte
 	lda #$31
-	sta $D405                          // Voice 1: Attack / Decay Cycle Control
+	sta ATDCY1                          // Voice 1: Attack / Decay Cycle Control
 	lda #$A1
-	sta $D406                          // Voice 1: Sustain / Release Cycle Control
+	sta SUREL1                          // Voice 1: Sustain / Release Cycle Control
 	lda #$11
-	sta $D404                          // Voice 1: Control Register
+	sta VCREG1                          // Voice 1: Control Register
 	rts
 
 // 1D95
@@ -4559,19 +4571,19 @@ L_JSR_3200_108C:
 L_JMP_3200_1907:
 
 	lda #$80
-	sta $D404                          // Voice 1: Control Register
-	sta $D40B                          // Voice 2: Control Register
-	sta $D412                          // Voice 3: Control Register
+	sta VCREG1                          // Voice 1: Control Register
+	sta VCREG2                          // Voice 2: Control Register
+	sta VCREG3                          // Voice 3: Control Register
 	lda #$00
-	sta $D401                          // Voice 1: Frequency Control - High-Byte
-	sta $D408                          // Voice 2: Frequency Control - High-Byte
-	sta $D40F                          // Voice 3: Frequency Control - High-Byte
+	sta FREHI1                          // Voice 1: Frequency Control - High-Byte
+	sta FREHI2                          // Voice 2: Frequency Control - High-Byte
+	sta FREHI3                          // Voice 3: Frequency Control - High-Byte
 	lda #$0F
-	sta $D418                          // Select Filter Mode and Volume
+	sta SIGVOL                          // Select Filter Mode and Volume
 	cpx #$1D
 	bne L_BRS_3237_321D
 	lda #$00
-	sta $D015                          // Sprite display Enable
+	sta SPENA                          // Sprite display Enable
 	jsr L_JSR_6307_3224
 	ldx #$1E
 	jsr L_JSR_62F4_3229
@@ -4601,7 +4613,7 @@ L_BRS_3246_323F:
 
 L_BRS_3252_3256:
 
-	sta $D000,X                          // Sprite 0 X Pos
+	sta SP0X,X                          // Sprite 0 X Pos
 	dex
 	bpl L_BRS_3252_3256
 	ldy $1E
@@ -5294,8 +5306,10 @@ L_JSR_3671_3497:
 
 	jsr L_JSR_6200_3671
 	and #$60
-	sta $ED 
+	sta $ED
 	jmp L_JMP_6200_3678
+
+// 367B
 
 	.byte $72,$73,$75,$74,$76,$7A,$7D,$77
 	.byte $72,$78,$75,$74,$10,$10,$11,$12
@@ -5376,17 +5390,17 @@ L_BRS_36F4_36E3:
 	bit $F0
 	bmi L_BRS_3718_36FA
 	lda #$08
-	sta $D404                          // Voice 1: Control Register
+	sta VCREG1                          // Voice 1: Control Register
 	lda $EA
 	clc
 	adc #$05
-	sta $D401                          // Voice 1: Frequency Control - High-Byte
+	sta FREHI1                          // Voice 1: Frequency Control - High-Byte
 	ldx #$41
 	ldy #$AA
 	lda #$21
-	stx $D405                          // Voice 1: Attack / Decay Cycle Control
-	sty $D406                          // Voice 1: Sustain / Release Cycle Control
-	sta $D404                          // Voice 1: Control Register
+	stx ATDCY1                          // Voice 1: Attack / Decay Cycle Control
+	sty SUREL1                          // Voice 1: Sustain / Release Cycle Control
+	sta VCREG1                          // Voice 1: Control Register
 
 L_BRS_3718_36FA:
 
@@ -5399,9 +5413,9 @@ L_BRS_371A_371E:
 	bne L_BRS_371A_371B
 	dey
 	bne L_BRS_371A_371E
-	lda $D404                          // Voice 1: Control Register
+	lda VCREG1                          // Voice 1: Control Register
 	and #$FE
-	sta $D404                          // Voice 1: Control Register
+	sta VCREG1                          // Voice 1: Control Register
 	rts
 
 L_JSR_3729_3699:
@@ -5627,204 +5641,205 @@ L_BRS_3979_3981:
 
 	ldy #$FF
 	jsr L_JSR_3591_397B
-	sec 
+	sec
 	sbc #$01
 	bne L_BRS_3979_3981
 	rts
 
-	.byte $00,$03,$0F,$0F,$0F
-	.byte $00,$80,$AA,$F3,$C3,$03,$F3,$F3
-	.byte $00,$AA,$A0,$CC,$FC,$3C,$0C,$0C
-	.byte $00,$A8,$0A,$C3,$C3,$C3,$FF,$FC
-	.byte $00,$2A,$A0,$00,$03,$00,$0F,$0F
-	.byte $00,$80,$AA,$33,$F3,$33,$F3,$C3
-	.byte $00,$AA,$A0,$0C,$FC,$F0,$0C,$0C
-	.byte $00,$A8,$0A,$C3,$C3,$C3,$FF,$FC
-	.byte $00,$2A,$A0,$0C,$0F,$0F,$00,$00
-	.byte $00,$80,$AA,$C0,$F0,$F0,$C0,$C0
-	.byte $00,$AA,$A0,$C3,$C3,$C3,$C3,$C3
-	.byte $00,$A8,$0A,$0C,$FC,$0C,$0C,$0C
-	.byte $00,$2A,$A0,$06,$07,$0E,$0F,$16
-	.byte $17,$1E,$1F,$0F,$0F,$C3,$F3,$0C
-	.byte $CC,$FC,$FF,$0F,$0F,$C3,$F3,$F0
-	.byte $FC,$FC,$FF,$0C,$0C,$C3,$C0,$F3
-	.byte $C3,$0C,$0C,$00,$00,$00,$00,$00
+// 3984
+
+	.byte $00,$03,$0F,$0F,$0F,$00,$80,$AA
+	.byte $F3,$C3,$03,$F3,$F3,$00,$AA,$A0
+	.byte $CC,$FC,$3C,$0C,$0C,$00,$A8,$0A
+	.byte $C3,$C3,$C3,$FF,$FC,$00,$2A,$A0
+	.byte $00,$03,$00,$0F,$0F,$00,$80,$AA
+	.byte $33,$F3,$33,$F3,$C3,$00,$AA,$A0
+	.byte $0C,$FC,$F0,$0C,$0C,$00,$A8,$0A
+	.byte $C3,$C3,$C3,$FF,$FC,$00,$2A,$A0
+	.byte $0C,$0F,$0F,$00,$00,$00,$80,$AA
+	.byte $C0,$F0,$F0,$C0,$C0,$00,$AA,$A0
+	.byte $C3,$C3,$C3,$C3,$C3,$00,$A8,$0A
+	.byte $0C,$FC,$0C,$0C,$0C,$00,$2A,$A0
+	.byte $06,$07,$0E,$0F,$16,$17,$1E,$1F
+	.byte $0F,$0F,$C3,$F3,$0C,$CC,$FC,$FF
+	.byte $0F,$0F,$C3,$F3,$F0,$FC,$FC,$FF
+	.byte $0C,$0C,$C3,$C0,$F3,$C3,$0C,$0C
 	.byte $00,$00,$00,$00,$00,$00,$00,$00
-	.byte $00,$00,$00,$01,$41,$0E,$00,$00
-	.byte $00,$00,$00,$00,$00,$00,$23,$03
-	.byte $01,$00,$00,$00,$00,$00,$00,$00
 	.byte $00,$00,$00,$00,$00,$00,$00,$00
-	.byte $00,$00,$00,$01,$03,$00,$00,$00
-	.byte $00,$00,$00,$00,$00,$09,$81,$41
-	.byte $01,$00,$00,$00,$00,$00,$00,$00
+	.byte $01,$41,$0E,$00,$00,$00,$00,$00
+	.byte $00,$00,$00,$23,$03,$01,$00,$00
 	.byte $00,$00,$00,$00,$00,$00,$00,$00
-	.byte $00,$00,$00,$01,$05,$16,$41,$00
-	.byte $00,$00,$00,$00,$00,$00,$00,$02
-	.byte $01,$00,$00,$00,$00,$00,$00,$00
 	.byte $00,$00,$00,$00,$00,$00,$00,$00
-	.byte $00,$00,$00,$01,$1E,$0B,$01,$22
-	.byte $03,$01,$02,$03,$15,$02,$1B,$0D
-	.byte $01,$00,$00,$00,$00,$00,$00,$00
-	.byte $00,$00,$00,$03,$03,$0D,$0E,$35
-	.byte $3A,$35,$3A,$0D,$3A,$35,$3A,$35
-	.byte $0E,$0D,$0E,$03,$03,$03,$03,$0D
-	.byte $0E,$35,$3A,$35,$3A,$35,$3A,$35
-	.byte $3B,$37,$3B,$35,$3A,$35,$3A,$0D
-	.byte $0E,$0D,$03,$03,$0E,$0D,$3A,$35
-	.byte $3A,$35,$3A,$35,$3A,$35,$3A,$35
-	.byte $3A,$35,$3A,$35,$3A,$35,$3A,$35
-	.byte $3A,$35,$3A,$0D,$03,$00,$00,$00
-	.byte $00,$00,$00,$00,$00,$00,$00,$03
-	.byte $0E,$35,$EB,$57,$AB,$57,$AB,$57
-	.byte $AB,$57,$AB,$57,$AB,$57,$AB,$57
-	.byte $AB,$57,$AA,$55,$AF,$5C,$AC,$5C
-	.byte $AC,$5C,$AC,$5C,$AC,$5C,$AC,$5C
-	.byte $AC,$5C,$AC,$DF,$EA,$DF,$EB,$75
-	.byte $BA,$55,$AA,$55,$AA,$55,$AA,$55
-	.byte $AA,$7D,$BB,$75,$BA,$75,$BA,$77
-	.byte $BE,$55,$AA,$55,$AA,$55,$AA,$55
-	.byte $AA,$55,$AA,$55,$AA,$D5,$3A,$0D
-	.byte $03,$00,$00,$00,$00,$3C,$FF,$57
-	.byte $AA,$55,$FF,$00,$00,$00,$03,$03
-	.byte $03,$03,$03,$03,$03,$03,$00,$00
-	.byte $00,$FF,$AA,$55,$FF,$00,$00,$00
-	.byte $03,$03,$03,$00,$00,$03,$03,$03
-	.byte $00,$00,$00,$FF,$AA,$55,$EA,$75
-	.byte $AA,$55,$AA,$55,$AA,$55,$AA,$55
-	.byte $AA,$55,$AA,$D5,$BA,$75,$EA,$55
-	.byte $AE,$55,$AA,$75,$BA,$75,$BA,$75
-	.byte $BA,$75,$BF,$55,$AA,$55,$AA,$55
-	.byte $FF,$3F,$00,$00,$00,$03,$3F,$F5
-	.byte $AA,$55,$FE,$03,$00,$00,$C0,$70
-	.byte $AC,$5C,$AC,$5C,$B0,$C0,$00,$00
-	.byte $03,$FD,$AA,$55,$FF,$00,$00,$00
-	.byte $FF,$55,$FE,$0D,$0E,$FD,$AA,$FF
-	.byte $00,$00,$00,$FF,$AA,$55,$AA,$55
-	.byte $AB,$57,$AB,$57,$AB,$55,$AA,$55
-	.byte $AA,$55,$AB,$5D,$AB,$55,$AA,$5D
-	.byte $AB,$55,$AA,$55,$AA,$55,$AA,$55
-	.byte $AA,$55,$EB,$55,$AA,$55,$AA,$55
-	.byte $BE,$FF,$00,$3F,$FF,$55,$AA,$55
-	.byte $AA,$55,$AA,$55,$EA,$35,$0E,$0D
-	.byte $0E,$0D,$0E,$0D,$0E,$0D,$3A,$D5
-	.byte $AA,$55,$AA,$55,$EA,$D5,$EA,$D5
-	.byte $EB,$57,$AB,$57,$AB,$57,$AB,$D7
-	.byte $EA,$D5,$EA,$D5,$AA,$55,$BF,$D5
-	.byte $AE,$7F,$BA,$7F,$AE,$D5,$BF,$55
-	.byte $AA,$D5,$BA,$5D,$AA,$D5,$BA,$5D
-	.byte $BA,$D5,$AA,$55,$AA,$55,$AA,$55
-	.byte $AA,$55,$AA,$55,$AA,$55,$AA,$55
-	.byte $AA,$FF,$FF,$CF,$FC,$55,$AA,$55
-	.byte $AA,$55,$BF,$70,$B0,$70,$B0,$70
-	.byte $B0,$70,$B0,$70,$B0,$70,$B0,$70
-	.byte $B0,$7F,$AA,$55,$AB,$5C,$B0,$C0
-	.byte $00,$03,$03,$03,$03,$03,$03,$00
-	.byte $C0,$70,$AC,$57,$AA,$55,$AA,$D5
-	.byte $BA,$75,$BA,$75,$BA,$D5,$AA,$55
-	.byte $AA,$55,$AA,$55,$AE,$77,$EA,$77
-	.byte $AE,$55,$AA,$F5,$EE,$D7,$EB,$FD
-	.byte $EB,$D7,$EE,$F5,$AA,$55,$AA,$55
-	.byte $AA,$FF,$FF,$F0,$3F,$57,$AA,$55
-	.byte $AA,$55,$FA,$35,$3A,$35,$3A,$35
-	.byte $3A,$35,$3A,$35,$3A,$35,$3A,$35
-	.byte $3A,$F5,$AA,$55,$FF,$00,$00,$00
-	.byte $FF,$55,$AA,$55,$BF,$70,$B0,$C0
-	.byte $00,$03,$0E,$F5,$AA,$55,$AA,$55
-	.byte $AB,$57,$AB,$57,$AB,$57,$AA,$55
-	.byte $AA,$75,$BA,$75,$BA,$7D,$BB,$77
-	.byte $BB,$55,$AA,$55,$AA,$55,$AB,$5D
-	.byte $BA,$5D,$AB,$55,$AA,$55,$AA,$55
-	.byte $AA,$FF,$F0,$3F,$FF,$F5,$AA,$55
-	.byte $AA,$55,$FF,$C0,$C0,$C0,$C0,$C0
+	.byte $01,$03,$00,$00,$00,$00,$00,$00
+	.byte $00,$00,$09,$81,$41,$01,$00,$00
+	.byte $00,$00,$00,$00,$00,$00,$00,$00
+	.byte $00,$00,$00,$00,$00,$00,$00,$00
+	.byte $01,$05,$16,$41,$00,$00,$00,$00
+	.byte $00,$00,$00,$00,$02,$01,$00,$00
+	.byte $00,$00,$00,$00,$00,$00,$00,$00
+	.byte $00,$00,$00,$00,$00,$00,$00,$00
+	.byte $01,$1E,$0B,$01,$22,$03,$01,$02
+	.byte $03,$15,$02,$1B,$0D,$01,$00,$00
+	.byte $00,$00,$00,$00,$00,$00,$00,$00
+	.byte $03,$03,$0D,$0E,$35,$3A,$35,$3A
+	.byte $0D,$3A,$35,$3A,$35,$0E,$0D,$0E
+	.byte $03,$03,$03,$03,$0D,$0E,$35,$3A
+	.byte $35,$3A,$35,$3A,$35,$3B,$37,$3B
+	.byte $35,$3A,$35,$3A,$0D,$0E,$0D,$03
+	.byte $03,$0E,$0D,$3A,$35,$3A,$35,$3A
+	.byte $35,$3A,$35,$3A,$35,$3A,$35,$3A
+	.byte $35,$3A,$35,$3A,$35,$3A,$35,$3A
+	.byte $0D,$03,$00,$00,$00,$00,$00,$00
+	.byte $00,$00,$00,$00,$03,$0E,$35,$EB
+	.byte $57,$AB,$57,$AB,$57,$AB,$57,$AB
+	.byte $57,$AB,$57,$AB,$57,$AB,$57,$AA
+	.byte $55,$AF,$5C,$AC,$5C,$AC,$5C,$AC
+	.byte $5C,$AC,$5C,$AC,$5C,$AC,$5C,$AC
+	.byte $DF,$EA,$DF,$EB,$75,$BA,$55,$AA
+	.byte $55,$AA,$55,$AA,$55,$AA,$7D,$BB
+	.byte $75,$BA,$75,$BA,$77,$BE,$55,$AA
+	.byte $55,$AA,$55,$AA,$55,$AA,$55,$AA
+	.byte $55,$AA,$D5,$3A,$0D,$03,$00,$00
+	.byte $00,$00,$3C,$FF,$57,$AA,$55,$FF
+	.byte $00,$00,$00,$03,$03,$03,$03,$03
+	.byte $03,$03,$03,$00,$00,$00,$FF,$AA
+	.byte $55,$FF,$00,$00,$00,$03,$03,$03
+	.byte $00,$00,$03,$03,$03,$00,$00,$00
+	.byte $FF,$AA,$55,$EA,$75,$AA,$55,$AA
+	.byte $55,$AA,$55,$AA,$55,$AA,$55,$AA
+	.byte $D5,$BA,$75,$EA,$55,$AE,$55,$AA
+	.byte $75,$BA,$75,$BA,$75,$BA,$75,$BF
+	.byte $55,$AA,$55,$AA,$55,$FF,$3F,$00
+	.byte $00,$00,$03,$3F,$F5,$AA,$55,$FE
+	.byte $03,$00,$00,$C0,$70,$AC,$5C,$AC
+	.byte $5C,$B0,$C0,$00,$00,$03,$FD,$AA
+	.byte $55,$FF,$00,$00,$00,$FF,$55,$FE
+	.byte $0D,$0E,$FD,$AA,$FF,$00,$00,$00
+	.byte $FF,$AA,$55,$AA,$55,$AB,$57,$AB
+	.byte $57,$AB,$55,$AA,$55,$AA,$55,$AB
+	.byte $5D,$AB,$55,$AA,$5D,$AB,$55,$AA
+	.byte $55,$AA,$55,$AA,$55,$AA,$55,$EB
+	.byte $55,$AA,$55,$AA,$55,$BE,$FF,$00
+	.byte $3F,$FF,$55,$AA,$55,$AA,$55,$AA
+	.byte $55,$EA,$35,$0E,$0D,$0E,$0D,$0E
+	.byte $0D,$0E,$0D,$3A,$D5,$AA,$55,$AA
+	.byte $55,$EA,$D5,$EA,$D5,$EB,$57,$AB
+	.byte $57,$AB,$57,$AB,$D7,$EA,$D5,$EA
+	.byte $D5,$AA,$55,$BF,$D5,$AE,$7F,$BA
+	.byte $7F,$AE,$D5,$BF,$55,$AA,$D5,$BA
+	.byte $5D,$AA,$D5,$BA,$5D,$BA,$D5,$AA
+	.byte $55,$AA,$55,$AA,$55,$AA,$55,$AA
+	.byte $55,$AA,$55,$AA,$55,$AA,$FF,$FF
+	.byte $CF,$FC,$55,$AA,$55,$AA,$55,$BF
+	.byte $70,$B0,$70,$B0,$70,$B0,$70,$B0
+	.byte $70,$B0,$70,$B0,$70,$B0,$7F,$AA
+	.byte $55,$AB,$5C,$B0,$C0,$00,$03,$03
+	.byte $03,$03,$03,$03,$00,$C0,$70,$AC
+	.byte $57,$AA,$55,$AA,$D5,$BA,$75,$BA
+	.byte $75,$BA,$D5,$AA,$55,$AA,$55,$AA
+	.byte $55,$AE,$77,$EA,$77,$AE,$55,$AA
+	.byte $F5,$EE,$D7,$EB,$FD,$EB,$D7,$EE
+	.byte $F5,$AA,$55,$AA,$55,$AA,$FF,$FF
+	.byte $F0,$3F,$57,$AA,$55,$AA,$55,$FA
+	.byte $35,$3A,$35,$3A,$35,$3A,$35,$3A
+	.byte $35,$3A,$35,$3A,$35,$3A,$F5,$AA
+	.byte $55,$FF,$00,$00,$00,$FF,$55,$AA
+	.byte $55,$BF,$70,$B0,$C0,$00,$03,$0E
+	.byte $F5,$AA,$55,$AA,$55,$AB,$57,$AB
+	.byte $57,$AB,$57,$AA,$55,$AA,$75,$BA
+	.byte $75,$BA,$7D,$BB,$77,$BB,$55,$AA
+	.byte $55,$AA,$55,$AB,$5D,$BA,$5D,$AB
+	.byte $55,$AA,$55,$AA,$55,$AA,$FF,$F0
+	.byte $3F,$FF,$F5,$AA,$55,$AA,$55,$FF
 	.byte $C0,$C0,$C0,$C0,$C0,$C0,$C0,$C0
-	.byte $C0,$FF,$AA,$55,$FA,$35,$3A,$35
-	.byte $FA,$55,$AA,$55,$FA,$35,$3A,$35
-	.byte $EA,$55,$AA,$55,$AA,$55,$AA,$55
-	.byte $AA,$57,$AA,$55,$AA,$57,$AA,$55
-	.byte $AA,$55,$AA,$55,$AA,$5F,$BA,$75
-	.byte $BA,$55,$AA,$55,$AA,$55,$AA,$D5
-	.byte $BB,$D7,$AB,$D5,$BA,$55,$AA,$55
-	.byte $AA,$FF,$FF,$FF,$F3,$55,$AA,$55
-	.byte $AA,$55,$EA,$D5,$3A,$0D,$03,$00
-	.byte $00,$00,$00,$C0,$F0,$DC,$EB,$D5
-	.byte $EA,$D5,$AA,$55,$AA,$57,$AC,$70
-	.byte $C0,$C0,$C0,$C0,$C0,$C0,$C0,$C0
-	.byte $B0,$5C,$AB,$55,$AA,$55,$AA,$75
-	.byte $EE,$57,$EE,$75,$EA,$55,$AA,$55
-	.byte $AA,$55,$AA,$55,$AB,$5D,$BA,$5D
-	.byte $AB,$55,$AA,$55,$AA,$57,$AA,$FD
-	.byte $AA,$55,$AA,$55,$AA,$55,$AA,$55
-	.byte $AA,$F7,$FF,$FC,$FF,$55,$AA,$55
-	.byte $AA,$55,$BF,$70,$B0,$70,$B0,$F0
-	.byte $30,$00,$00,$00,$00,$00,$00,$C0
-	.byte $B0,$7F,$AA,$55,$FF,$00,$00,$00
-	.byte $3F,$D5,$EA,$D5,$EF,$DC,$EC,$30
-	.byte $00,$00,$03,$FD,$AA,$55,$AA,$55
-	.byte $AB,$5D,$AB,$5D,$BA,$5D,$AB,$55
-	.byte $AA,$55,$AA,$55,$AA,$D5,$BB,$D5
-	.byte $AA,$55,$AA,$D5,$EA,$F5,$EA,$D5
-	.byte $EA,$DD,$BA,$55,$FA,$5D,$AB,$55
-	.byte $EA,$FF,$3F,$3F,$FF,$55,$AA,$55
-	.byte $AA,$55,$FA,$35,$3A,$35,$3A,$35
-	.byte $3A,$35,$3A,$35,$3A,$35,$3A,$35
-	.byte $3A,$F5,$AA,$55,$FE,$0D,$0E,$0D
-	.byte $FE,$55,$AA,$55,$FE,$0D,$0E,$0D
-	.byte $3A,$D5,$AA,$55,$AA,$55,$AA,$D5
-	.byte $BA,$5D,$BA,$D5,$BA,$D5,$AA,$55
-	.byte $AA,$55,$AA,$55,$BA,$DD,$AB,$DD
-	.byte $BA,$5D,$AB,$55,$AA,$55,$AE,$77
-	.byte $EA,$77,$AE,$55,$AA,$55,$EA,$FF
-	.byte $BF,$FC,$00,$C0,$FF,$55,$AA,$55
-	.byte $AA,$55,$AA,$57,$AC,$70,$C0,$C0
-	.byte $C0,$C0,$C0,$C0,$C0,$C0,$B0,$5C
-	.byte $AB,$55,$AA,$55,$AA,$57,$AC,$70
-	.byte $B0,$5C,$AB,$55,$AA,$55,$AA,$7F
-	.byte $B0,$70,$B0,$7F,$AA,$55,$AA,$57
-	.byte $AE,$55,$AA,$57,$AA,$77,$AE,$55
-	.byte $AA,$55,$AA,$55,$AB,$5D,$BA,$5D
-	.byte $AB,$55,$AA,$55,$AA,$55,$AA,$57
-	.byte $EE,$5D,$AE,$55,$AA,$75,$FE,$CF
-	.byte $03,$00,$00,$FF,$FF,$55,$AA,$55
-	.byte $AA,$55,$FF,$00,$00,$00,$0C,$37
-	.byte $EA,$D5,$EA,$D5,$3B,$0C,$00,$00
-	.byte $00,$FF,$AA,$55,$FF,$00,$00,$00
-	.byte $00,$00,$00,$C0,$B0,$5C,$AC,$F0
-	.byte $00,$00,$00,$FF,$AA,$55,$AA,$55
-	.byte $EA,$75,$EA,$55,$EA,$55,$AA,$55
-	.byte $AA,$75,$BA,$75,$BA,$F5,$BB,$D5
-	.byte $AA,$55,$AA,$55,$AB,$55,$AA,$D5
-	.byte $BA,$75,$BA,$55,$AA,$55,$AA,$55
-	.byte $FA,$FD,$0F,$FC,$FF,$7F,$AA,$55
-	.byte $AA,$55,$EA,$35,$0E,$03,$00,$00
-	.byte $C0,$C0,$C0,$C0,$00,$00,$03,$0D
-	.byte $3A,$D5,$AA,$55,$FF,$00,$00,$00
-	.byte $3F,$D5,$EA,$35,$0E,$03,$00,$00
-	.byte $00,$00,$03,$FD,$AA,$55,$AA,$55
-	.byte $AA,$55,$AA,$55,$AA,$55,$AA,$55
-	.byte $AA,$55,$AA,$55,$BA,$DD,$AB,$DD
-	.byte $BA,$5D,$AB,$D5,$BA,$D5,$AA,$D5
-	.byte $EA,$D5,$EA,$55,$AA,$55,$AA,$55
-	.byte $AA,$FF,$C0,$00,$00,$C0,$F0,$5F
-	.byte $AB,$55,$AA,$55,$AA,$55,$EA,$D5
-	.byte $EA,$D5,$EA,$D5,$EA,$D5,$AA,$55
-	.byte $AA,$55,$AA,$55,$FA,$35,$3A,$35
-	.byte $FA,$55,$AA,$55,$AA,$55,$EA,$35
-	.byte $3A,$D5,$AA,$57,$AF,$57,$AF,$57
-	.byte $AB,$57,$AB,$5D,$AE,$75,$BA,$75
-	.byte $EA,$D5,$AA,$55,$AA,$5F,$BA,$75
-	.byte $BA,$55,$AA,$55,$AA,$55,$AA,$55
-	.byte $AA,$55,$AA,$55,$AA,$55,$AA,$55
-	.byte $AA,$D7,$FC,$00,$00,$00,$00,$00
-	.byte $00,$00,$C0,$70,$B0,$5C,$BC,$5C
-	.byte $BC,$5C,$BC,$5C,$BC,$70,$B0,$5C
-	.byte $BC,$5C,$AC,$5C,$BC,$5C,$BC,$5C
-	.byte $BC,$5C,$AC,$5C,$BC,$5C,$AC,$7C
-	.byte $F0,$70,$C0,$00,$00,$00,$C0,$C0
-	.byte $F0,$5C,$AC,$5C,$AC,$5C,$AC,$5C
-	.byte $AC,$5C,$AC,$5C,$B0,$70,$B0,$70
-	.byte $B0,$70,$B0,$70,$B0,$70,$AC,$5C
-	.byte $AC,$5C,$AC,$5C,$AC,$5C,$AC,$70
-	.byte $C0,$00,$00
+	.byte $C0,$C0,$C0,$C0,$C0,$C0,$FF,$AA
+	.byte $55,$FA,$35,$3A,$35,$FA,$55,$AA
+	.byte $55,$FA,$35,$3A,$35,$EA,$55,$AA
+	.byte $55,$AA,$55,$AA,$55,$AA,$57,$AA
+	.byte $55,$AA,$57,$AA,$55,$AA,$55,$AA
+	.byte $55,$AA,$5F,$BA,$75,$BA,$55,$AA
+	.byte $55,$AA,$55,$AA,$D5,$BB,$D7,$AB
+	.byte $D5,$BA,$55,$AA,$55,$AA,$FF,$FF
+	.byte $FF,$F3,$55,$AA,$55,$AA,$55,$EA
+	.byte $D5,$3A,$0D,$03,$00,$00,$00,$00
+	.byte $C0,$F0,$DC,$EB,$D5,$EA,$D5,$AA
+	.byte $55,$AA,$57,$AC,$70,$C0,$C0,$C0
+	.byte $C0,$C0,$C0,$C0,$C0,$B0,$5C,$AB
+	.byte $55,$AA,$55,$AA,$75,$EE,$57,$EE
+	.byte $75,$EA,$55,$AA,$55,$AA,$55,$AA
+	.byte $55,$AB,$5D,$BA,$5D,$AB,$55,$AA
+	.byte $55,$AA,$57,$AA,$FD,$AA,$55,$AA
+	.byte $55,$AA,$55,$AA,$55,$AA,$F7,$FF
+	.byte $FC,$FF,$55,$AA,$55,$AA,$55,$BF
+	.byte $70,$B0,$70,$B0,$F0,$30,$00,$00
+	.byte $00,$00,$00,$00,$C0,$B0,$7F,$AA
+	.byte $55,$FF,$00,$00,$00,$3F,$D5,$EA
+	.byte $D5,$EF,$DC,$EC,$30,$00,$00,$03
+	.byte $FD,$AA,$55,$AA,$55,$AB,$5D,$AB
+	.byte $5D,$BA,$5D,$AB,$55,$AA,$55,$AA
+	.byte $55,$AA,$D5,$BB,$D5,$AA,$55,$AA
+	.byte $D5,$EA,$F5,$EA,$D5,$EA,$DD,$BA
+	.byte $55,$FA,$5D,$AB,$55,$EA,$FF,$3F
+	.byte $3F,$FF,$55,$AA,$55,$AA,$55,$FA
+	.byte $35,$3A,$35,$3A,$35,$3A,$35,$3A
+	.byte $35,$3A,$35,$3A,$35,$3A,$F5,$AA
+	.byte $55,$FE,$0D,$0E,$0D,$FE,$55,$AA
+	.byte $55,$FE,$0D,$0E,$0D,$3A,$D5,$AA
+	.byte $55,$AA,$55,$AA,$D5,$BA,$5D,$BA
+	.byte $D5,$BA,$D5,$AA,$55,$AA,$55,$AA
+	.byte $55,$BA,$DD,$AB,$DD,$BA,$5D,$AB
+	.byte $55,$AA,$55,$AE,$77,$EA,$77,$AE
+	.byte $55,$AA,$55,$EA,$FF,$BF,$FC,$00
+	.byte $C0,$FF,$55,$AA,$55,$AA,$55,$AA
+	.byte $57,$AC,$70,$C0,$C0,$C0,$C0,$C0
+	.byte $C0,$C0,$C0,$B0,$5C,$AB,$55,$AA
+	.byte $55,$AA,$57,$AC,$70,$B0,$5C,$AB
+	.byte $55,$AA,$55,$AA,$7F,$B0,$70,$B0
+	.byte $7F,$AA,$55,$AA,$57,$AE,$55,$AA
+	.byte $57,$AA,$77,$AE,$55,$AA,$55,$AA
+	.byte $55,$AB,$5D,$BA,$5D,$AB,$55,$AA
+	.byte $55,$AA,$55,$AA,$57,$EE,$5D,$AE
+	.byte $55,$AA,$75,$FE,$CF,$03,$00,$00
+	.byte $FF,$FF,$55,$AA,$55,$AA,$55,$FF
+	.byte $00,$00,$00,$0C,$37,$EA,$D5,$EA
+	.byte $D5,$3B,$0C,$00,$00,$00,$FF,$AA
+	.byte $55,$FF,$00,$00,$00,$00,$00,$00
+	.byte $C0,$B0,$5C,$AC,$F0,$00,$00,$00
+	.byte $FF,$AA,$55,$AA,$55,$EA,$75,$EA
+	.byte $55,$EA,$55,$AA,$55,$AA,$75,$BA
+	.byte $75,$BA,$F5,$BB,$D5,$AA,$55,$AA
+	.byte $55,$AB,$55,$AA,$D5,$BA,$75,$BA
+	.byte $55,$AA,$55,$AA,$55,$FA,$FD,$0F
+	.byte $FC,$FF,$7F,$AA,$55,$AA,$55,$EA
+	.byte $35,$0E,$03,$00,$00,$C0,$C0,$C0
+	.byte $C0,$00,$00,$03,$0D,$3A,$D5,$AA
+	.byte $55,$FF,$00,$00,$00,$3F,$D5,$EA
+	.byte $35,$0E,$03,$00,$00,$00,$00,$03
+	.byte $FD,$AA,$55,$AA,$55,$AA,$55,$AA
+	.byte $55,$AA,$55,$AA,$55,$AA,$55,$AA
+	.byte $55,$BA,$DD,$AB,$DD,$BA,$5D,$AB
+	.byte $D5,$BA,$D5,$AA,$D5,$EA,$D5,$EA
+	.byte $55,$AA,$55,$AA,$55,$AA,$FF,$C0
+	.byte $00,$00,$C0,$F0,$5F,$AB,$55,$AA
+	.byte $55,$AA,$55,$EA,$D5,$EA,$D5,$EA
+	.byte $D5,$EA,$D5,$AA,$55,$AA,$55,$AA
+	.byte $55,$FA,$35,$3A,$35,$FA,$55,$AA
+	.byte $55,$AA,$55,$EA,$35,$3A,$D5,$AA
+	.byte $57,$AF,$57,$AF,$57,$AB,$57,$AB
+	.byte $5D,$AE,$75,$BA,$75,$EA,$D5,$AA
+	.byte $55,$AA,$5F,$BA,$75,$BA,$55,$AA
+	.byte $55,$AA,$55,$AA,$55,$AA,$55,$AA
+	.byte $55,$AA,$55,$AA,$55,$AA,$D7,$FC
+	.byte $00,$00,$00,$00,$00,$00,$00,$C0
+	.byte $70,$B0,$5C,$BC,$5C,$BC,$5C,$BC
+	.byte $5C,$BC,$70,$B0,$5C,$BC,$5C,$AC
+	.byte $5C,$BC,$5C,$BC,$5C,$BC,$5C,$AC
+	.byte $5C,$BC,$5C,$AC,$7C,$F0,$70,$C0
+	.byte $00,$00,$00,$C0,$C0,$F0,$5C,$AC
+	.byte $5C,$AC,$5C,$AC,$5C,$AC,$5C,$AC
+	.byte $5C,$B0,$70,$B0,$70,$B0,$70,$B0
+	.byte $70,$B0,$70,$AC,$5C,$AC,$5C,$AC
+	.byte $5C,$AC,$5C,$AC,$70,$C0,$00,$00
 
 L_JMP_3F84_31FA:
 
@@ -5994,14 +6009,14 @@ L_BRS_405F_4052:
 	cmp #$A8
 	bne L_BRS_4081_4063
 	lda #$08
-	sta $D404                          // Voice 1: Control Register
-	sta $D401                          // Voice 1: Frequency Control - High-Byte
+	sta VCREG1                          // Voice 1: Control Register
+	sta FREHI1                          // Voice 1: Frequency Control - High-Byte
 	ldx #$00
 	ldy #$F0
 	lda #$81
-	stx $D405                          // Voice 1: Attack / Decay Cycle Control
-	sty $D406                          // Voice 1: Sustain / Release Cycle Control
-	sta $D404                          // Voice 1: Control Register
+	stx ATDCY1                          // Voice 1: Attack / Decay Cycle Control
+	sty SUREL1                          // Voice 1: Sustain / Release Cycle Control
+	sta VCREG1                          // Voice 1: Control Register
 	ldy #$1E
 	jsr L_JSR_4623_407E
 
@@ -6044,25 +6059,25 @@ L_BRS_40B0_40BD:
 	dex
 	bpl L_BRS_40B0_40BD
 	lda #$18
-	sta $D01D                          // Sprites Expand 2x Horizontal (X)
+	sta XXPAND                          // Sprites Expand 2x Horizontal (X)
 	lda #$02
-	sta $D029                          // Sprite 2 Color
-	sta $D02A                          // Sprite 3 Color
-	sta $D027                          // Sprite 0 Color
-	sta $D028                          // Sprite 1 Color
-	sta $D02B                          // Sprite 4 Color
-	sta $D02C                          // Sprite 5 Color
+	sta SP2COL                          // Sprite 2 Color
+	sta SP3COL                          // Sprite 3 Color
+	sta SP0COL                          // Sprite 0 Color
+	sta SP1COL                          // Sprite 1 Color
+	sta SP4COL                          // Sprite 4 Color
+	sta SP5COL                          // Sprite 5 Color
 	ldx #$0F
 
 L_BRS_40DA_40E1:
 
 	lda $44DA,X
-	sta $D000,X                          // Sprite 0 X Pos
+	sta SP0X,X                          // Sprite 0 X Pos
 	dex
 	bpl L_BRS_40DA_40E1
-	stx $D015                          // Sprite display Enable
+	stx SPENA                          // Sprite display Enable
 	lda #$09
-	sta $D010                          // Sprites 0-7 MSB of X coordinate
+	sta MSIGX                          // Sprites 0-7 MSB of X coordinate
 	lda #$95
 	sta $0203
 	ldx #$FF
@@ -6188,7 +6203,7 @@ L_BRS_4198_417C:
 
 	sta $EC
 	lda #$FF
-	sta $DC02                          // Data Direction Register A
+	sta D1DDRA                          // Data Direction Register A
 	jsr L_JSR_7D55_419F
 	beq L_BRS_41AA_41A2
 
@@ -6201,9 +6216,9 @@ L_BRS_41A4_41B7:
 L_BRS_41AA_41A2:
 
 	ldx #$00
-	stx $DC02                          // Data Direction Register A
-	stx $DC03                          // Data Direction Register B
-	lda $DC00                          // Data Port A (Keyboard, Joystick, Paddles)
+	stx D1DDRA                          // Data Direction Register A
+	stx D1DDRB                          // Data Direction Register B
+	lda D1PRA                          // Data Port A (Keyboard, Joystick, Paddles)
 	and #$10
 	beq L_BRS_41A4_41B7
 	ldy #$28
@@ -6222,7 +6237,7 @@ L_BRS_41C7_41C2:
 	ldx #$52
 	jsr L_JSR_4499_41CC
 	lda #$00
-	sta $D01D                          // Sprites Expand 2x Horizontal (X)
+	sta XXPAND                          // Sprites Expand 2x Horizontal (X)
 	jsr L_JSR_44EA_41D4
 	lda #$00
 	sta $BFFA
@@ -6242,10 +6257,10 @@ L_JMP_41EC_383E:
 L_BRS_41EC_41E9:
 
 	lda #$06
-	sta $D027                          // Sprite 0 Color
-	sta $D028                          // Sprite 1 Color
+	sta SP0COL                          // Sprite 0 Color
+	sta SP1COL                          // Sprite 1 Color
 	lda #$03
-	sta $D01C                          // Sprites Multi-Color Mode Select
+	sta SPMC                          // Sprites Multi-Color Mode Select
 	rts
 
 // 41FA
@@ -6321,26 +6336,26 @@ L_BRS_41EC_41E9:
 
 L_JSR_4415_4180:
 
-	lda $ED 
+	lda $ED
 	ldx #$10
 
 L_BRS_4419_441F:
 
-	cmp $4424,X 
+	cmp $4424,X
 	beq L_BRS_4421_441C
-	dex 
+	dex
 	bpl L_BRS_4419_441F
 
 L_BRS_4421_441C:
 
-	stx $EB 
+	stx $EB
 	rts
 
-
+// 4424
 
 	.byte $03,$0A,$11,$13,$16,$17,$1F,$23
 	.byte $25,$28,$29,$2A,$2B,$2C,$2D,$2E
-	.byte $2F  
+	.byte $2F
 // 4435
 	pha
 	txa
@@ -6358,15 +6373,15 @@ L_BRS_4445_4446:
 	dex
 	bne L_BRS_4445_4446
 	lda #$08
-	sta $D016                          // Control Register 2
+	sta SCROLX                          // Control Register 2
 
 L_BRS_444D_4452:
 
-	lda $D012                          // Raster Position
+	lda RASTER                          // Raster Position
 	cmp #$8A
 	bne L_BRS_444D_4452
 	lda #$EE
-	sta $D012                          // Raster Position
+	sta RASTER                          // Raster Position
 	lda #$FF
 	sta $0202
 	ldx #$04
@@ -6376,33 +6391,33 @@ L_BRS_4460_4461:
 	dex
 	bne L_BRS_4460_4461
 	lda #$18
-	sta $D016                          // Control Register 2
+	sta SCROLX                          // Control Register 2
 	jmp L_JMP_448B_4468
 
 L_BRS_446B_4441:
 
 	lda #$4A
-	sta $D012                          // Raster Position
+	sta RASTER                          // Raster Position
 	lda #$18
-	sta $D016                          // Control Register 2
+	sta SCROLX                          // Control Register 2
 	lda #$3B
-	sta $D011                          // Control Register 1
+	sta SCROLY                          // Control Register 1
 	bne L_BRS_448B_447A
 
 L_BRS_447C_443D:
 
 	lda #$F6
-	sta $D012                          // Raster Position
+	sta RASTER                          // Raster Position
 	lda #$08
-	sta $D016                          // Control Register 2
+	sta SCROLX                          // Control Register 2
 	lda #$95
-	sta $DD00                          // Data Port A (Serial Bus, RS232, VIC Base Mem.)
+	sta D2PRA                          // Data Port A (Serial Bus, RS232, VIC Base Mem.)
 
 L_JMP_448B_4468:
 L_BRS_448B_447A:
 
 	lda #$01
-	sta $D019                          // Interrupt Request Register (IRR)
+	sta VICIRQ                          // Interrupt Request Register (IRR)
 	inc $0202
 	pla
 	tay
@@ -6418,7 +6433,7 @@ L_JSR_4499_41CC:
 
 L_BRS_449C_44A1:
 
-	ldx $D012                          // Raster Position
+	ldx RASTER                          // Raster Position
 	cpx #$90
 	bne L_BRS_449C_44A1
 	sei
@@ -6584,7 +6599,7 @@ L_BRS_4605_45FE:
 	lsr
 	clc
 	adc #$03
-	sta $D401                          // Voice 1: Frequency Control - High-Byte
+	sta FREHI1                          // Voice 1: Frequency Control - High-Byte
 	asl
 	asl
 	asl
@@ -6593,9 +6608,9 @@ L_BRS_4605_45FE:
 	ldy #$81
 	ldx #$52
 	lda #$81
-	stx $D405                          // Voice 1: Attack / Decay Cycle Control
-	sty $D406                          // Voice 1: Sustain / Release Cycle Control
-	sta $D404                          // Voice 1: Control Register
+	stx ATDCY1                          // Voice 1: Attack / Decay Cycle Control
+	sty SUREL1                          // Voice 1: Sustain / Release Cycle Control
+	sta VCREG1                          // Voice 1: Control Register
 	ldy #$12
 
 L_JSR_4623_407E:
@@ -6604,12 +6619,12 @@ L_BRS_4623_462F:
 
 	inx
 	bne L_BRS_4623_4624
-	lda $D404                          // Voice 1: Control Register
+	lda VCREG1                          // Voice 1: Control Register
 	eor #$91
-	sta $D404                          // Voice 1: Control Register
+	sta VCREG1                          // Voice 1: Control Register
 	dey
 	bne L_BRS_4623_462F
-	stx $D404                          // Voice 1: Control Register
+	stx VCREG1                          // Voice 1: Control Register
 	rts
 
 // 4635
@@ -6655,15 +6670,15 @@ L_BRS_4719_475C:
 	cpx #$19
 	beq L_BRS_4741_4724
 	lda $475F,X
-	sta $D400                          // Voice 1: Frequency Control - Low-Byte
+	sta FRELO1                          // Voice 1: Frequency Control - Low-Byte
 	lda $477D,X
-	sta $D401                          // Voice 1: Frequency Control - High-Byte
+	sta FREHI1                          // Voice 1: Frequency Control - High-Byte
 	lda #$11
-	sta $D404                          // Voice 1: Control Register
+	sta VCREG1                          // Voice 1: Control Register
 	lda #$23
-	sta $D405                          // Voice 1: Attack / Decay Cycle Control
+	sta ATDCY1                          // Voice 1: Attack / Decay Cycle Control
 	lda #$C1
-	sta $D406                          // Voice 1: Sustain / Release Cycle Control
+	sta SUREL1                          // Voice 1: Sustain / Release Cycle Control
 
 L_BRS_4741_4724:
 
@@ -6677,9 +6692,9 @@ L_BRS_4748_474F:
 	jsr L_JSR_3591_474A
 	dec $E0
 	bne L_BRS_4748_474F
-	lda $D404                          // Voice 1: Control Register
+	lda VCREG1                          // Voice 1: Control Register
 	and #$FE
-	sta $D404                          // Voice 1: Control Register
+	sta VCREG1                          // Voice 1: Control Register
 	ldy $EF
 	iny
 	bne L_BRS_4719_475C
@@ -7389,7 +7404,7 @@ L_BRS_522A_5224:
 	dex
 	bpl L_BRS_521A_522C
 	lda #$04
-	sta $D408                          // Voice 2: Frequency Control - High-Byte
+	sta FREHI2                          // Voice 2: Frequency Control - High-Byte
 	jsr L_JSR_56BA_5233
 
 L_JMP_5236_51C4:
@@ -7548,13 +7563,13 @@ L_BRS_5315_52FD:
 	ldy #$F0
 	jsr L_JSR_56B0_5334
 	lda #$32
-	sta $D408                          // Voice 2: Frequency Control - High-Byte
+	sta FREHI2                          // Voice 2: Frequency Control - High-Byte
 
 L_BRS_533C_533D:
 
 	inx
 	bne L_BRS_533C_533D
-	stx $D40B                          // Voice 2: Control Register
+	stx VCREG2                          // Voice 2: Control Register
 	ldx $EE
 	jmp L_JMP_5188_5344
 
@@ -8055,20 +8070,20 @@ L_BRS_55E1_55D8:
 
 L_BRS_55E3_55C9:
 
-	sta $D00B,Y                          // Sprite 5 Y Pos
+	sta SP5Y,Y                          // Sprite 5 Y Pos
 	lda $94,X
 	clc
 	adc #$0A
 	asl
-	sta $D00A,Y                          // Sprite 5 X Pos
-	lda $D010                          // Sprites 0-7 MSB of X coordinate
+	sta SP5X,Y                          // Sprite 5 X Pos
+	lda MSIGX                          // Sprites 0-7 MSB of X coordinate
 	and $5E44,Y
 	bcc L_BRS_55FA_55F5
 	ora $5E45,Y
 
 L_BRS_55FA_55F5:
 
-	sta $D010                          // Sprites 0-7 MSB of X coordinate
+	sta MSIGX                          // Sprites 0-7 MSB of X coordinate
 	dex
 	bpl L_BRS_55C4_55FE
 	lda #$85
@@ -8130,7 +8145,7 @@ L_BRS_5637_5631:
 	and #$07
 	tay
 	lda $5668,Y
-	sta $D02C,X                          // Sprite 5 Color
+	sta SP5COL,X                          // Sprite 5 Color
 	rts
 
 // 565E
@@ -8180,9 +8195,9 @@ L_BRS_56AB_56A7:
 L_JSR_56B0_5334:
 L_JSR_56B0_56C0:
 
-	sta $D40B                          // Voice 2: Control Register
-	stx $D40C                          // Voice 2: Attack / Decay Cycle Control
-	sty $D40D                          // Voice 2: Sustain / Release Cycle Control
+	sta VCREG2                          // Voice 2: Control Register
+	stx ATDCY2                          // Voice 2: Attack / Decay Cycle Control
+	sty SUREL2                          // Voice 2: Sustain / Release Cycle Control
 	rts
 
 L_JSR_56BA_5233:
@@ -8202,11 +8217,11 @@ L_BRS_56C7_56D1:
 
 	inx
 	bne L_BRS_56C7_56C8
-	inc $D408                          // Voice 2: Frequency Control - High-Byte
-	inc $D408                          // Voice 2: Frequency Control - High-Byte
+	inc FREHI2                          // Voice 2: Frequency Control - High-Byte
+	inc FREHI2                          // Voice 2: Frequency Control - High-Byte
 	dey
 	bne L_BRS_56C7_56D1
-	sty $D40B                          // Voice 2: Control Register
+	sty VCREG2                          // Voice 2: Control Register
 	rts
 
 // 56D7
@@ -8532,29 +8547,29 @@ L_BRS_56C7_56D1:
 	and #$01
 	beq L_BRS_60A2_6089
 	lda #$18
-	sta $D016                          // Control Register 2
+	sta SCROLX                          // Control Register 2
 	lda $0203
-	sta $DD00                          // Data Port A (Serial Bus, RS232, VIC Base Mem.)
+	sta D2PRA                          // Data Port A (Serial Bus, RS232, VIC Base Mem.)
 	lda #$3B
-	sta $D011                          // Control Register 1
+	sta SCROLY                          // Control Register 1
 	lda #$EE
-	sta $D012                          // Raster Position
+	sta RASTER                          // Raster Position
 	bne L_BRS_60B4_60A0
 
 L_BRS_60A2_6089:
 
 	lda #$F7
-	sta $D012                          // Raster Position
+	sta RASTER                          // Raster Position
 	lda #$08
-	sta $D016                          // Control Register 2
+	sta SCROLX                          // Control Register 2
 	lda #$95
-	sta $DD00                          // Data Port A (Serial Bus, RS232, VIC Base Mem.)
+	sta D2PRA                          // Data Port A (Serial Bus, RS232, VIC Base Mem.)
 	inc $0201
 
 L_BRS_60B4_60A0:
 
 	lda #$01
-	sta $D019                          // Interrupt Request Register (IRR)
+	sta VICIRQ                          // Interrupt Request Register (IRR)
 	inc $0202
 	pla
 	tay
@@ -8567,8 +8582,14 @@ L_BRS_60B4_60A0:
 
 	.byte $7F,$FF,$FF,$00,$00,$E0,$EF,$42
 	.byte $00,$00,$00,$01,$00,$7F,$01,$01
+
+// 60D2
+
 	.byte $97,$BD,$3F,$03,$AE,$BD,$01,$E6
 	.byte $00,$00,$00,$11,$00,$7F,$01,$01
+
+// 60E2
+
 	.byte $00,$40,$80,$C0,$00,$40,$80,$C0
 	.byte $00,$40,$80,$C0,$00,$40,$80,$C0
 	.byte $00,$40,$80,$C0,$00,$40,$80,$C0
@@ -8798,11 +8819,11 @@ L_JSR_6200_7248:
 L_JSR_6200_7C67:
 L_JSR_6200_7C7D:
 
-	lda $DC04                          // Timer A Low-Byte  (Kernal-IRQ, Tape)
-	adc $DD06                          // Timer B Low-Byte  (RS232)
-	eor $DD04                          // Timer A Low-Byte  (RS232)
+	lda D1T1L	// TIMALO :CIA1_Timer A Low-Byte  (Kernal-IRQ, Tape)
+	adc D2T2L	// TI2BLO :CIA2_Timer B Low-Byte  (RS232)
+	eor D2T1L	// TI2ALO :CIA2_Timer A Low-Byte  (RS232)
 	rol $DF
-	adc $DC07                          // Timer B High-Byte (Tape, Serial Port)
+	adc D1T2H	// TIMBHI :CIA1_Timer B High-Byte (Tape, Serial Port)
 	eor $DF
 	inc $DF
 	rts
@@ -9404,7 +9425,7 @@ L_JSR_6762_6CE4:
 	lda $6793,Y
 	rts
 
-
+// 6784
 
 	.byte $00,$01,$02,$28,$29,$2A,$50,$51
 	.byte $52,$03,$04,$2B,$2C,$53,$54,$20
@@ -9426,58 +9447,56 @@ L_JSR_679B_7C45:
 	adc #$01
 	rts
 
-
-
-	.byte $00,$40,$95,$94,$12
-	.byte $50,$D0,$22,$60,$E8,$28,$70,$F0
-	.byte $F8,$05,$0A,$0F,$14,$00,$20,$40
-	.byte $60,$FA,$94,$22,$95,$4A,$95,$72
-	.byte $95,$9A,$95,$C2,$95,$EA,$95,$12
-	.byte $96,$3A,$96,$62,$96,$8A,$96,$B2
-	.byte $96,$DA,$96,$02,$97,$2A,$97,$52
-	.byte $97,$7A,$97,$A2,$97,$CA,$97,$F2
-	.byte $97,$1F,$1F,$17,$0F,$07,$07,$AA
-	.byte $BA,$AB,$8D,$35,$35,$D7,$F1,$AA
-	.byte $FC,$C7,$51,$55,$15,$C7,$73,$AA
-	.byte $8A,$EA,$E8,$70,$30,$5C,$4C,$AA
-	.byte $CA,$8B,$AD,$2D,$31,$35,$C7,$AA
-	.byte $FF,$15,$F1,$5C,$77,$D7,$55,$EA
-	.byte $AB,$EA,$EB,$70,$70,$5C,$3C,$AA
-	.byte $AA,$A3,$2D,$35,$33,$D5,$DF,$AA
-	.byte $FF,$55,$71,$5C,$45,$5C,$31,$AA
-	.byte $8A,$EB,$70,$5C,$4C,$E7,$47,$AA
-	.byte $AB,$AC,$AD,$31,$3D,$D5,$D7,$AA
-	.byte $FC,$C7,$51,$55,$77,$54,$D5,$AA
-	.byte $AE,$BB,$E2,$C0,$30,$70,$5C,$D5
-	.byte $D4,$D5,$F5,$33,$35,$0F,$00,$5D
-	.byte $5D,$77,$D7,$54,$75,$45,$FF,$7C
-	.byte $5C,$1C,$70,$70,$70,$C0,$00,$D5
-	.byte $D1,$D5,$35,$34,$35,$0D,$03,$57
-	.byte $55,$D3,$55,$55,$D5,$53,$FC,$5C
-	.byte $4C,$70,$70,$70,$C0,$00,$00,$D5
-	.byte $DD,$31,$35,$0D,$0C,$03,$00,$C5
-	.byte $5C,$55,$C7,$55,$DD,$53,$FF,$77
-	.byte $57,$5C,$0C,$70,$70,$C0,$00,$D5
-	.byte $C5,$D7,$31,$3D,$0D,$0C,$03,$1C
-	.byte $51,$17,$CD,$75,$DC,$51,$FF,$4C
-	.byte $5C,$70,$70,$30,$C0,$C0,$00,$20
-	.byte $30,$40,$50,$60,$70,$80,$90,$A0
-	.byte $B0,$C0,$D0,$E0,$F0,$50,$60,$FB
-	.byte $04,$F7,$08,$EF,$10,$1A,$98,$38
-	.byte $98,$56,$98,$74,$98,$92,$98,$B0
-	.byte $98,$CE,$98,$EC,$98,$0A,$99,$28
-	.byte $99,$46,$99,$64,$99,$82,$99,$A0
-	.byte $99,$BE,$99,$A0,$99,$DC,$99,$FA
-	.byte $99,$18,$9A,$FA,$99,$36,$9A,$54
-	.byte $9A,$72,$9A,$54,$9A,$90,$9A,$AE
-	.byte $9A,$CC,$9A,$AE,$9A,$EA,$9A,$08
-	.byte $9B,$26,$9B,$44,$9B,$62,$9B,$80
-	.byte $9B,$9E,$9B,$BC,$9B,$DA,$9B,$F8
-	.byte $9B,$16,$9C,$34,$9C,$52,$9C,$70
-	.byte $9C,$8E,$9C,$BC,$9E,$DA,$9E,$F8
-	.byte $9E,$16,$9F,$34,$9F,$52,$9F,$B2
-	.byte $8B,$B2,$8B,$01,$00,$0A,$00,$13
-	.byte $00
+// 67A7
+	.byte $00,$40,$95,$94,$12,$50,$D0,$22
+	.byte $60,$E8,$28,$70,$F0,$F8,$05,$0A
+	.byte $0F,$14,$00,$20,$40,$60,$FA,$94
+	.byte $22,$95,$4A,$95,$72,$95,$9A,$95
+	.byte $C2,$95,$EA,$95,$12,$96,$3A,$96
+	.byte $62,$96,$8A,$96,$B2,$96,$DA,$96
+	.byte $02,$97,$2A,$97,$52,$97,$7A,$97
+	.byte $A2,$97,$CA,$97,$F2,$97,$1F,$1F
+	.byte $17,$0F,$07,$07,$AA,$BA,$AB,$8D
+	.byte $35,$35,$D7,$F1,$AA,$FC,$C7,$51
+	.byte $55,$15,$C7,$73,$AA,$8A,$EA,$E8
+	.byte $70,$30,$5C,$4C,$AA,$CA,$8B,$AD
+	.byte $2D,$31,$35,$C7,$AA,$FF,$15,$F1
+	.byte $5C,$77,$D7,$55,$EA,$AB,$EA,$EB
+	.byte $70,$70,$5C,$3C,$AA,$AA,$A3,$2D
+	.byte $35,$33,$D5,$DF,$AA,$FF,$55,$71
+	.byte $5C,$45,$5C,$31,$AA,$8A,$EB,$70
+	.byte $5C,$4C,$E7,$47,$AA,$AB,$AC,$AD
+	.byte $31,$3D,$D5,$D7,$AA,$FC,$C7,$51
+	.byte $55,$77,$54,$D5,$AA,$AE,$BB,$E2
+	.byte $C0,$30,$70,$5C,$D5,$D4,$D5,$F5
+	.byte $33,$35,$0F,$00,$5D,$5D,$77,$D7
+	.byte $54,$75,$45,$FF,$7C,$5C,$1C,$70
+	.byte $70,$70,$C0,$00,$D5,$D1,$D5,$35
+	.byte $34,$35,$0D,$03,$57,$55,$D3,$55
+	.byte $55,$D5,$53,$FC,$5C,$4C,$70,$70
+	.byte $70,$C0,$00,$00,$D5,$DD,$31,$35
+	.byte $0D,$0C,$03,$00,$C5,$5C,$55,$C7
+	.byte $55,$DD,$53,$FF,$77,$57,$5C,$0C
+	.byte $70,$70,$C0,$00,$D5,$C5,$D7,$31
+	.byte $3D,$0D,$0C,$03,$1C,$51,$17,$CD
+	.byte $75,$DC,$51,$FF,$4C,$5C,$70,$70
+	.byte $30,$C0,$C0,$00,$20,$30,$40,$50
+	.byte $60,$70,$80,$90,$A0,$B0,$C0,$D0
+	.byte $E0,$F0,$50,$60,$FB,$04,$F7,$08
+	.byte $EF,$10,$1A,$98,$38,$98,$56,$98
+	.byte $74,$98,$92,$98,$B0,$98,$CE,$98
+	.byte $EC,$98,$0A,$99,$28,$99,$46,$99
+	.byte $64,$99,$82,$99,$A0,$99,$BE,$99
+	.byte $A0,$99,$DC,$99,$FA,$99,$18,$9A
+	.byte $FA,$99,$36,$9A,$54,$9A,$72,$9A
+	.byte $54,$9A,$90,$9A,$AE,$9A,$CC,$9A
+	.byte $AE,$9A,$EA,$9A,$08,$9B,$26,$9B
+	.byte $44,$9B,$62,$9B,$80,$9B,$9E,$9B
+	.byte $BC,$9B,$DA,$9B,$F8,$9B,$16,$9C
+	.byte $34,$9C,$52,$9C,$70,$9C,$8E,$9C
+	.byte $BC,$9E,$DA,$9E,$F8,$9E,$16,$9F
+	.byte $34,$9F,$52,$9F,$B2,$8B,$B2,$8B
+	.byte $01,$00,$0A,$00,$13,$00
 
 L_JSR_692D_0A83:
 
@@ -10749,23 +10768,17 @@ L_BRS_718C_7189:
 	sty $F4
 	ldx #$03
 	jmp L_JMP_7E2B_7194
-
-// #####################################
-// NEVER EXECUTES
-
+// ############# snippet ###############
 	lda #$04
 	sta $DB00,X
 	inx
-	bne L_BRS_715F_719D_BAD// + 1
+	bne L_BRS_715F_719D_BAD + 1
 	rts
-
 	cpx #$0B
 	beq L_BRS_71BC_71A2
 	ldy $04FC
 	cpy #$16
 // #####################################
-
-
 L_JSR_71A9_0F81:
 L_JSR_71A9_0F90:
 L_JSR_71A9_0F98:
@@ -11397,12 +11410,12 @@ L_BRS_7C90_7C4A:
 	.byte $00,$10,$10,$10,$00,$00,$30,$30
 	.byte $30,$00,$00,$50,$50,$50,$00,$00
 	.byte $70,$70,$70
-	
+
 L_JSR_7CE4_0E67:
 L_JSR_7CE4_0EFD:
 
 	ldy #$00
-	sec     
+	sec
 
 L_BRS_7CE7_7CEA:
 
@@ -11469,18 +11482,18 @@ L_JSR_7D35_11B0:
 L_JSR_7D35_11DA:
 
 	lda #$FF
-	sta $DC02                          // Data Direction Register A
+	sta D1DDRA                          // Data Direction Register A
 	ldx #$07
 
 L_BRS_7D3C_7D52:
 
 	lda $6114,X
-	sta $DC00                          // Data Port A (Keyboard, Joystick, Paddles)
+	sta D1PRA                          // Data Port A (Keyboard, Joystick, Paddles)
 
 L_BRS_7D42_7D48:
 
-	lda $DC01                          // Data Port B (Keyboard, Joystick, Paddles)
-	cmp $DC01                          // Data Port B (Keyboard, Joystick, Paddles)
+	lda D1PRB                          // Data Port B (Keyboard, Joystick, Paddles)
+	cmp D1PRB                          // Data Port B (Keyboard, Joystick, Paddles)
 	bne L_BRS_7D42_7D48
 	and $611C,X
 	cmp #$01
@@ -11494,12 +11507,12 @@ L_JSR_7D55_11FB:
 L_JSR_7D55_419F:
 
 	lda #$00
-	sta $DC00                          // Data Port A (Keyboard, Joystick, Paddles)
+	sta D1PRA                          // Data Port A (Keyboard, Joystick, Paddles)
 
 L_BRS_7D5A_7D60:
 
-	lda $DC01                          // Data Port B (Keyboard, Joystick, Paddles)
-	cmp $DC01                          // Data Port B (Keyboard, Joystick, Paddles)
+	lda D1PRB                          // Data Port B (Keyboard, Joystick, Paddles)
+	cmp D1PRB                          // Data Port B (Keyboard, Joystick, Paddles)
 	bne L_BRS_7D5A_7D60
 	cmp #$FF
 	rts
@@ -11555,9 +11568,9 @@ L_JMP_7DD2_7086:
 L_JMP_7DD2_7090:
 
 	lda #$0F
-	sta $D418                          // Select Filter Mode and Volume
+	sta SIGVOL                          // Select Filter Mode and Volume
 	lda #$02
-	sta $D401                          // Voice 1: Frequency Control - High-Byte
+	sta FREHI1                          // Voice 1: Frequency Control - High-Byte
 	lda #$21
 	ldx #$51
 	ldy #$91
@@ -11565,7 +11578,7 @@ L_JMP_7DD2_7090:
 	ldy #$20
 	jsr L_JSR_7E07_7DE7
 	lda #$08
-	sta $D404                          // Voice 1: Control Register
+	sta VCREG1                          // Voice 1: Control Register
 	lda #$31
 	ldy $CE
 	cpy #$09
@@ -11579,9 +11592,9 @@ L_BRS_7DF9_7DF5:
 
 L_JSR_7DFD_7DE2:
 
-	sta $D404                          // Voice 1: Control Register
-	stx $D405                          // Voice 1: Attack / Decay Cycle Control
-	sty $D406                          // Voice 1: Sustain / Release Cycle Control
+	sta VCREG1                          // Voice 1: Control Register
+	stx ATDCY1                          // Voice 1: Attack / Decay Cycle Control
+	sty SUREL1                          // Voice 1: Sustain / Release Cycle Control
 	rts
 
 L_JSR_7E07_7DE7:
@@ -11597,7 +11610,7 @@ L_BRS_7E09_7E15:
 	lsr
 	clc
 	adc #$04
-	sta $D401                          // Voice 1: Frequency Control - High-Byte
+	sta FREHI1                          // Voice 1: Frequency Control - High-Byte
 	dey
 	bne L_BRS_7E09_7E15
 	rts

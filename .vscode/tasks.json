@@ -8,6 +8,13 @@
     ],
     "tasks": [
         {
+            "label": "Compare to original",
+            "type": "shell",
+            "windows": {
+                "command": "fc /b ${fileDirname}\\bin\\dinoriginal.prg ${fileDirname}\\bin\\dinoeggs.prg"
+            }
+        },
+        {
             "label": "KICK Assemble Source",
             "type": "shell",
             "windows": {
