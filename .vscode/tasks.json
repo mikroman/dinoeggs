@@ -12,23 +12,26 @@
             "type": "shell",
             "windows": {
                 "command": "fc /b ${fileDirname}\\bin\\dinoriginal.prg ${fileDirname}\\bin\\dinoeggs.prg"
-            }
+            },
+            "dependsOn": [
+                "Assemble"
+            ]
         },
         {
-            "label": "KICK Assemble Source",
+            "label": "Assemble",
             "type": "shell",
             "windows": {
                 "command": "java -cp C:\\C64\\tools\\kickassembler\\KickAss.jar kickass.KickAssembler ${fileBasenameNoExtension}.asm -o bin\\${fileBasenameNoExtension}.prg -debugdump -bytedump"
             }
         },
         {
-            "label": "KICK Build & Launch C64debugger",
+            "label": "C64debugger - build & launch",
             "type": "shell",
             "windows": {
                 "command": "\"C:\\Users\\Mike\\Desktop\\C64Debug\\C64Debugger-v0.64.58.6\\C64Debugger.exe\" -prg ${fileDirname}\\bin\\${fileBasenameNoExtension}.prg -d64 ${fileDirname}\\bin\\dinoeggs.d64 -debuginfo ${fileDirname}\\bin\\${fileBasenameNoExtension}.dbg -layout 11"
             },
             "dependsOn": [
-                "KICK Assemble Source"
+                "Assemble"
             ],
             "problemMatcher": [],
             "group": {
@@ -37,13 +40,13 @@
             }
         },
         {
-            "label": "KICK Build & Launch VICE prg",
+            "label": "VICE - build & launch",
             "type": "shell",
             "windows": {
                 "command": "\"C:\\C64\\tools\\GTK3VICE-3.7-win64\\bin\\x64sc.exe\" -8 ${fileDirname}\\bin\\dinoeggs.d64 ${fileDirname}\\bin\\${fileBasenameNoExtension}.prg"
             },
             "dependsOn": [
-                "KICK Assemble Source"
+                "Assemble"
             ],
             "problemMatcher": [],
             "group": {

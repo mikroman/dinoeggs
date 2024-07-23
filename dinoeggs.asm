@@ -1,7 +1,6 @@
 // project created by mikroman
 // June 18,2024
-
-
+// [ ][$][0-z][0-z][0-z]
 .import source "dino_labels.asm"
 #define no_error		// comment this line for read_error build
 //#define read_error	// uncomment this line for read_error build
@@ -57,7 +56,7 @@ L_JMP_0819_0810:	// Disk protection check
 
 L_BRS_0849_0852:	// perform Block Read (U1) of T,S = 18,18 to look for a checksum error
 
-	lda $1D97,X
+	lda BlockRead,X		// get a byte from U1 command string
 	jsr CHROUT		// Output Vector, chrout
 	inx
 	cpx #$0C
@@ -76,7 +75,7 @@ L_BRS_0849_0852:	// perform Block Read (U1) of T,S = 18,18 to look for a checksu
 L_BRS_086C_0863:
 
 	sei
-	jmp (RESET)
+	jmp (RESET_vector)
 
 L_BRS_0870_086A:
 
@@ -97,19 +96,19 @@ start:	// 10 SYS2178 entry: skip disk error check
 	sei
 	ldx #$1E
 
-L_BRS_0885_088C:
+L_BRS_0885_088C:	// prep VIC $D010-D01E
 
-	lda $6060,X
+	lda table_6060,X
 	sta MSIGX,X		// Sprites 0-7 MSB of X coordinate
 	dex
 	bpl L_BRS_0885_088C
 	ldx #$0F
 
-L_BRS_0890_089D:
+L_BRS_0890_089D:	// prep CIA1 and CIA2
 
-	lda $60C2,X
+	lda table_60C2,X
 	sta D1PRA,X                          // Data Port A (Keyboard, Joystick, Paddles)
-	lda $60D2,X
+	lda table_60D2,X
 	sta D2PRA,X                          // Data Port A (Serial Bus, RS232, VIC Base Mem.)
 	dex
 	bpl L_BRS_0890_089D
@@ -118,9 +117,9 @@ L_BRS_0890_089D:
 	ldy #$86
 	jsr L_JSR_660C_08A5
 	lda #$BA
-	sta $FFFA                          // Vector: NMI
+	sta NMI_vector                          // Vector: NMI
 	lda #$1C
-	sta $FFFB
+	sta NMI_vector + 1
 	lda #$95
 	sta D2PRA                          // Data Port A (Serial Bus, RS232, VIC Base Mem.)
 	sta $0203
@@ -143,9 +142,9 @@ L_BRS_08C0_08D5:
 	ldx #$07
 
 L_BRS_08DC_08E9:
-	lda $1C92,X
+	lda table_1C92,X
 	sta $CFE0,X
-	lda $1C9A,X
+	lda table_1C9A,X
 	sta $CFF0,X
 	dex
 	bpl L_BRS_08DC_08E9
@@ -177,14 +176,14 @@ L_BRS_08FD_0900:
 L_BRS_0916_093C:
 
 	sty $EF
-	ldx $627B,Y
+	ldx table_627B,Y
 	ldy #$02
 
 L_BRS_091D_092B:
 
-	lda $625F,X
+	lda table_625F,X
 	sta ($E0),Y
-	lda $6260,X
+	lda table_625F + 1,X
 	sta ($E2),Y
 	iny
 	inx
@@ -213,16 +212,16 @@ L_BRS_0940_0953:
 	dex
 	stx $DE
 	lda #$6C
-	sta $1D95
+	sta v_1D95
 
 L_JMP_095D_1204:
 
 	lda #$7F
-	sta $FFFE                          // Vector: IRQ
+	sta IRQ_vector                          // Vector: IRQ
 	lda #$60
-	sta $FFFF
+	sta IRQ_vector + 1
 	lda #$85
-	sta $632A
+	sta LOOP_632A
 
 L_JMP_096C_10B3:
 L_JMP_096C_18AE:
@@ -269,7 +268,7 @@ L_JMP_09A4_1738:
 	lda $20
 	and #$01
 	tax
-	lda $67A7,X
+	lda table_67A7,X
 	sta $29
 	ldy #$27
 	sty $EF
@@ -325,12 +324,12 @@ L_BRS_09F3_09EE:
 	lda $BFFC,X
 	tax
 	dex
-	lda $7CCD,X
+	lda table_7CCD,X
 	beq L_BRS_0A1F_0A00
-	ldy $7CCC,X
+	ldy table_7CCC,X
 	beq L_BRS_0A1F_0A05
 	ldy $09
-	ora $1C6A,Y
+	ora table_1C6A,Y
 	tay
 	ldx #$05
 	lda $05
@@ -380,18 +379,18 @@ L_BRS_0A48_0A4E:
 	bpl L_BRS_0A48_0A4E
 	lda $0C
 	bpl L_BRS_0A71_0A52
-	lda $1C86,X
+	lda table_1C86,X
 	clc
 	adc $CE
 	tay
-	lda $6EB9,Y
+	lda table_6EB9,Y
 	jsr L_JSR_1C4D_0A5E
 	lda $E5
 	and #$1F
 	ora #$D8
 	sta $E5
 	ldy $CE
-	lda $6ED7,Y
+	lda table_6ED7,Y
 	jsr L_JSR_1C4D_0A6E
 
 L_BRS_0A71_0A52:
@@ -486,7 +485,7 @@ L_BRS_0ADB_0ACB:
 L_BRS_0ADB_0AD1:
 
 	lda #$60
-	sta $632A
+	sta LOOP_632A
 
 L_BRS_0AE0_0AC9:
 
@@ -568,7 +567,7 @@ L_BRS_0B2B_0AF9:
 	sta VCREG1                          // Voice 1: Control Register
 	ldy $02D7
 	inc $02D7
-	lda $7CCA,Y
+	lda table_7CCA,Y
 	pha
 	jsr L_JSR_722D_0B54
 	dey
@@ -675,9 +674,9 @@ L_BRS_0BD8_0BCC:
 	clc
 	adc #$20
 	ldy $54,X
-	cmp $7CB6,Y
+	cmp table_7CB6,Y
 	bcs L_BRS_0BFA_0BF0
-	cmp $7CB9,Y
+	cmp table_7CB9,Y
 	bcs L_BRS_0C3A_0BF5
 	lda #$00
 	.byte $2C
@@ -795,13 +794,13 @@ L_BRS_0C7D_0C78:
 	lda $71,X
 	bne L_BRS_0CA3_0C7F
 	ldy $54,X
-	lda $7CBF,Y
+	lda table_7CBF,Y
 	pha
 	lda $4E,X
 	pha
 	jsr L_JSR_71FE_0C8A
 	sec
-	sbc $7CBC,Y
+	sbc table_7CBC,Y
 	tax
 	pla
 	clc
@@ -956,13 +955,13 @@ L_BRS_0D4D_0D3F:
 
 	asl
 	tay
-	lda $68C1,Y
+	lda table_68C1,Y
 	pha
-	lda $68C2,Y
-	ldy $6927,X
-	sta $171B,Y
+	lda table_68C1 + 1,Y
+	ldy table_6927,X
+	sta MOON,Y
 	pla
-	sta $171A,Y
+	sta MOON-1,Y
 	lda #$1F
 	sta $E0
 	lda $55,X
@@ -1050,7 +1049,7 @@ L_BRS_0DC5_0DBC:
 	lda $20
 	and #$03
 	tay
-	ldx $1BAB,Y
+	ldx table_1BAB_7andFs,Y
 	ldy #$17
 
 L_BRS_0DEF_0DFF:
@@ -1072,7 +1071,7 @@ L_BRS_0DEF_0DFF:
 
 L_BRS_0E0C_0E12:
 
-	ldy $6784,X
+	ldy table_6784,X
 	sta ($E4),Y
 	dex
 	bpl L_BRS_0E0C_0E12
@@ -1105,7 +1104,7 @@ L_BRS_0E26_0E1E:
 L_BRS_0E32_0E2B:
 
 	ldx $64,Y
-	lda $7CCD,X
+	lda table_7CCD,X
 	sta $E8
 	lda $0060,Y
 	sty $EF
@@ -1139,7 +1138,7 @@ L_BRS_0E6F_0E65:
 	lda $68,X
 	lsr
 	tay
-	ldx $1BAB,Y
+	ldx table_1BAB_7andFs,Y
 	ldy #$17
 
 L_BRS_0E78_0E88:
@@ -1157,13 +1156,13 @@ L_BRS_0E78_0E88:
 	jsr L_JSR_6762_0E8C
 	ldx $EF
 	ldy $6C,X
-	lda $7CC2,Y
+	lda table_7CC2,Y
 	ora $0E
 	ldx #$05
 
 L_BRS_0E9A_0EA0:
 
-	ldy $6784,X
+	ldy table_6784,X
 	sta ($E4),Y
 	dex
 	bpl L_BRS_0E9A_0EA0
@@ -1174,7 +1173,7 @@ L_JMP_0EA2_0E2F:
 	dec $68,X
 	bne L_BRS_0EB9_0EA6
 	ldy $6C,X
-	lda $7CC6,Y
+	lda table_7CC6,Y
 	beq L_BRS_0EB9_0EAD
 	ldy $64,X
 	pha
@@ -1234,7 +1233,7 @@ L_BRS_0EE5_0EDD:
 	bcs L_BRS_0EC5_0EEC
 	ldx $0237,Y
 	bmi L_BRS_0F24_0EF1
-	lda $7CCD,X
+	lda table_7CCD,X
 	sta $E8
 	beq L_BRS_0F0A_0EF8
 	lda $020F,Y
@@ -1296,7 +1295,7 @@ L_BRS_0F4D_0F3B:
 
 L_BRS_0F5D_0F63:
 
-	ldy $6784,X
+	ldy table_6784,X
 	sta ($E4),Y
 	dex
 	bpl L_BRS_0F5D_0F63
@@ -1427,7 +1426,7 @@ L_BRS_100B_1005:
 
 L_BRS_1010_1016:
 
-	lda $3141,Y
+	lda table_3141,Y
 	sta ($E0),Y
 	dey
 	bpl L_BRS_1010_1016
@@ -1439,7 +1438,7 @@ L_BRS_1010_1016:
 
 L_BRS_1022_1028:
 
-	lda $30E1,Y
+	lda table_30E1,Y
 	sta ($E0),Y
 	dey
 	bpl L_BRS_1022_1028
@@ -1450,22 +1449,22 @@ L_BRS_1022_1028:
 	dex
 	beq L_BRS_106E_1032
 
-L_BRS_1034_106C:
+L_BRS_1034_106C:	// 
 
 	jsr L_JSR_1C21_1034
 	lda $0D
 	sec
 	sbc $EF
 	tay
-	lda $1C52,Y
-	sta $104D
-	sta $1059
-	sta $1063
+	lda table_1C55_dinomama - 3,Y
+	sta MAMA+1
+	sta PAPA+1
+	sta BABY+1
 	ldy #$5F
 
 L_BRS_104B_1055:
 
-	lda $F000,Y
+	lda MAMA:$F000,Y
 	ora #$03
 	sta ($E0),Y
 	dey
@@ -1474,7 +1473,7 @@ L_BRS_104B_1055:
 
 L_BRS_1057_105F:
 
-	lda $F000,Y
+	lda PAPA:$F000,Y
 	sta ($E0),Y
 	dey
 	cpy #$07
@@ -1482,7 +1481,7 @@ L_BRS_1057_105F:
 
 L_BRS_1061_1069:
 
-	lda $F000,Y
+	lda BABY:$F000,Y
 	ora #$C0
 	sta ($E0),Y
 	dey
@@ -1598,7 +1597,7 @@ L_BRS_10F6_10F0:
 
 L_BRS_10FE_1104:
 
-	cmp $1C1D,Y
+	cmp table_1C1D_4bytes,Y
 	beq L_BRS_1109_1101
 	dey
 	bpl L_BRS_10FE_1104
@@ -1687,7 +1686,7 @@ L_BRS_116A_1161:
 	lda $20
 	and #$01
 	tax
-	lda $67A9,X
+	lda table_67A7 + 2,X
 	sta $0203
 	ldy $0400
 	cpy #$FF
@@ -1867,8 +1866,8 @@ L_JMP_1267_1318:
 L_JMP_1267_1554:
 L_JMP_1267_15D4:
 
-	lda $5AD6,X
-	ldy $5AE4,X
+	lda table_5AD6,X
+	ldy table_5AE4,X
 	jmp L_JMP_15DD_126D
 
 L_BRS_1270_125D:
@@ -2089,7 +2088,7 @@ L_BRS_138F_138B:
 
 	lda $1B
 	sec
-	sbc $6250,X
+	sbc table_6250,X
 	sta $17
 	sty $E0
 	cpx $E0
@@ -2114,7 +2113,7 @@ L_BRS_13AE_13A9:
 
 	lda $17
 	sec
-	sbc $622D,X
+	sbc table_622D,X
 	sta $17
 	dec $18
 	bne L_BRS_142B_13B8
@@ -2208,7 +2207,7 @@ L_JMP_142E_13AB:
 	beq L_BRS_1458_1430
 	lda $17
 	clc
-	adc $622D,X
+	adc table_622D,X
 	sta $17
 	inc $19
 	cmp $1B
@@ -2291,7 +2290,7 @@ L_BRS_14A5_1497:
 	txa
 	and #$0F
 	tax
-	lda $7109,X
+	lda table_7109,X
 	sta $15
 	inc $1C
 	jmp L_JMP_14E5_14B2
@@ -2372,7 +2371,7 @@ L_BRS_14FC_14FF:
 	inx
 	sbc #$14
 	bcs L_BRS_14FC_14FF
-	lda $6249,X
+	lda table_6249,X
 	sta $1B
 	txa
 	asl
@@ -2457,7 +2456,7 @@ L_BRS_156B_158B:
 	lda $16
 	and #$0F
 	tay
-	lda $7109,Y
+	lda table_7109,Y
 	sta $15
 	jsr L_JSR_1D17_157D
 	jmp L_JMP_15D7_1580
@@ -2501,7 +2500,7 @@ L_BRS_15A5_1597:
 	lda $1C
 	beq L_BRS_15B2_15A7
 	ldx $1F
-	lda $621F,X
+	lda table_621F,X
 	tax
 	jmp L_JMP_15D7_15AF
 
@@ -2539,13 +2538,13 @@ L_BRS_15D7_15C4:
 L_BRS_15D7_15C8:
 L_BRS_15D7_15D0:
 
-	lda $65DE,X
-	ldy $65F5,X
+	lda table_65DE,X
+	ldy table_65F5,X
 
 L_JMP_15DD_126D:
 
-	sta $1675
-	sty $1676
+	sta GEMINI		// LB
+	sty GEMINI + 1		// HB
 
 L_JMP_15E3_1350:
 L_JMP_15E3_1368:
@@ -2608,7 +2607,7 @@ L_BRS_1634_162A:
 
 	lda $0201
 	sta $020D
-	ldx $1D95
+	ldx v_1D95
 
 L_BRS_163D_1665:
 
@@ -2638,14 +2637,14 @@ L_BRS_164F_1647:
 L_BRS_165E_1653:
 L_BRS_165E_165A:
 
-	cpx $1D95
+	cpx v_1D95
 	beq L_BRS_1667_1661
 	cpy #$00
 	bne L_BRS_163D_1665
 
 L_BRS_1667_1661:
 
-	stx $1D95
+	stx v_1D95
 	ldy #$00
 	lda $02
 	bmi L_BRS_1674_166E
@@ -2659,9 +2658,9 @@ L_BRS_1674_1688:
 L_BRS_1674_168C:
 L_BRS_1674_16AB:
 
-	lda $F000,Y
-	sta $8400,Y
-	sta $C400,Y
+	lda GEMINI:$F000,Y
+	sta RAM8400,Y
+	sta RAMC400,Y
 	iny
 	cpy #$33
 	beq L_BRS_16AD_1680
@@ -2676,13 +2675,13 @@ L_BRS_1674_16AB:
 
 L_BRS_1692_16A9:
 
-	lda $7C95,X
+	lda table_7C95,X
 	stx $EF
 	tax
 	lda $0700,X
 	and #$55
-	sta $8400,Y
-	sta $C400,Y
+	sta RAM8400,Y
+	sta RAMC400,Y
 	iny
 	ldx $EF
 	inx
@@ -2757,10 +2756,10 @@ L_BRS_16FA_16F2:
 	lda $48,X
 	sta SP2X,X                          // Sprite 2 X Pos
 	lda MSIGX                          // Sprites 0-7 MSB of X coordinate
-	and $68BB,X
+	and table_68BB,X
 	ldy $49,X
 	beq L_BRS_1711_170C
-	ora $68BC,X
+	ora table_68BB + 1,X
 
 L_BRS_1711_170C:
 
@@ -2772,15 +2771,15 @@ L_BRS_1711_170C:
 
 L_BRS_171A_1736:
 
-	lda $F000,Y
-	sta $8440,Y
-	sta $C440,Y
-	lda $F000,Y
-	sta $8480,Y
-	sta $C480,Y
-	lda $F000,Y
-	sta $84C0,Y
-	sta $C4C0,Y
+	lda MOON:$F000,Y
+	sta RAM8400 + $40,Y
+	sta RAMC400 + $40,Y
+	lda SUN:$F000,Y
+	sta RAM8400 + $80,Y
+	sta RAMC400 + $80,Y
+	lda STARS:$F000,Y
+	sta RAM8400 + $C0,Y
+	sta RAMC400 + $C0,Y
 	dey
 	bpl L_BRS_171A_1736
 	jmp L_JMP_09A4_1738
@@ -2873,7 +2872,7 @@ L_BRS_1794_178B:
 	lsr
 	lsr
 	tax
-	lda $6249,X
+	lda table_6249,X
 	clc
 	adc #$07
 	sta $004E,Y
@@ -2908,7 +2907,7 @@ L_BRS_17CD_17D9:
 	jsr L_JSR_6200_17E4
 	and #$07
 	tax
-	lda $1C8A,X
+	lda table_1C8A,X
 	sta SP2COL,Y                          // Sprite 2 Color
 	ldx #$0F
 	jsr L_JSR_6307_17F2
@@ -3129,12 +3128,12 @@ L_BRS_1910_194C:
 	lsr
 	lsr
 	tay
-	lda $1C1D,Y
+	lda table_1C1D_4bytes,Y
 	pha
 	txa
 	and #$0F
 	tay
-	lda $6E77,Y
+	lda table_6E77,Y
 	asl
 	asl
 	stx $EA
@@ -3278,7 +3277,7 @@ L_BRS_19CF_19C0:
 L_BRS_19E9_19AB:
 
 	lda $20
-	and #$07
+	and SEVEN:#07
 	bne L_BRS_1A3D_19ED
 	sed
 	lda $D4
@@ -3299,7 +3298,7 @@ L_BRS_19E9_19AB:
 L_BRS_1A0B_1A00:
 L_BRS_1A0B_1A04:
 
-	lda $19EC
+	lda SEVEN
 	asl
 	ora #$01
 	and $20
@@ -3401,7 +3400,7 @@ L_BRS_1A8C_1A75:
 	bne L_BRS_1AA9_1A94
 	jsr L_JSR_6200_1A96
 	ldy $CE
-	cmp $67AB,Y
+	cmp table_67AB,Y
 	bcs L_BRS_1AA9_1A9E
 	ldx #$02
 
@@ -3430,10 +3429,10 @@ L_BRS_1AB0_1AF7:
 	jsr L_JSR_6200_1AB0
 	and #$03
 	tay
-	lda $67B5,Y
+	lda table_67B5,Y
 	sta $E4
 	jsr L_JSR_679B_1ABB
-	ora $67B9,Y
+	ora table_67B9,Y
 	tay
 	lda $0510,Y
 	cmp #$25
@@ -3534,12 +3533,12 @@ L_BRS_1B39_1B33:
 	lsr
 	lsr
 	tax
-	lda $6249,X
+	lda table_6249,X
 	sta $17
 	lda $16
 	and #$0F
 	tax
-	lda $7109,X
+	lda table_7109,X
 	sta $15
 	ldx #$0E
 	jmp L_JMP_6307_1B59
@@ -3605,7 +3604,7 @@ L_JMP_1BA2_0CC9:
 	sta $55,X
 	jmp L_JMP_0C50_1BA8
 
-// 1BAB
+table_1BAB_7andFs:
 
 	.byte $17,$2F,$47,$5F,$77,$8F,$A7
 
@@ -3653,11 +3652,11 @@ L_JSR_1BB2_0C98:
 
 L_BRS_1BF9_1BF6:
 
-	sta $19EC
+	sta SEVEN
 
 L_BRS_1BFC_1BE6:
 
-	lsr $19EC
+	lsr SEVEN
 	ldx #$04
 	lda $1E
 	cmp #$03
@@ -3685,7 +3684,7 @@ L_BRS_1C18_1BE0:
 	lda #$00
 	rts
 
-// 1C1D
+table_1C1D_4bytes:
 
 	.byte $06,$0B,$10,$15
 
@@ -3735,17 +3734,37 @@ L_JSR_1C4D_0A6E:
 	ldy #$0F
 	bne L_BRS_1C47_1C53
 
-// 1C55
+table_1C55_dinomama:
 
 	.byte $0E,$0D,$0C,$0E,$0D,$0C,$0E,$0D
 	.byte $0C,$0E,$0D,$0C,$0E,$0D,$0C,$0E
-	.byte $0D,$0C,$0E,$0D,$0C,$00,$00,$01
+	.byte $0D,$0C,$0E,$0D,$0C
+
+table_1C6A:
+
+	.byte $00,$00,$01
 	.byte $01,$01,$02,$02,$02,$03,$03,$03
 	.byte $04,$04,$04,$05,$05,$05,$06,$06
 	.byte $06,$07,$07,$07,$08,$08,$08,$09
-	.byte $09,$09,$00,$0A,$14,$01,$03,$07
-	.byte $0E,$0D,$01,$0A,$04,$1C,$3C,$7C
-	.byte $FC,$7C,$3C,$1C,$00,$E0,$F0,$F8
+	.byte $09
+	
+table_1C86:
+	
+	.byte $09,$00,$0A,$14
+	
+table_1C8A:
+	
+	.byte $01,$03,$07
+	.byte $0E,$0D,$01,$0A,$04
+	
+table_1C92:
+	
+	.byte $1C,$3C,$7C
+	.byte $FC,$7C,$3C,$1C,$00
+	
+table_1C9A:
+	
+	.byte $E0,$F0,$F8
 	.byte $FC,$F8,$F0,$E0,$00
 
 L_JSR_1CA2_1293:
@@ -3763,6 +3782,9 @@ L_BRS_1CA4_1CB7:
 	dey
 	bpl L_BRS_1CA4_1CB7
 	rts
+
+NMI:	// 1CBA
+
 	lda #$00
 	sta $DE
 	jmp L_JMP_1204_1CBE
@@ -3839,12 +3861,12 @@ L_JSR_1D17_157D:
 	asl
 	asl
 	clc
-	adc $1D65,Y
+	adc table_1D65,Y
 	sta $E2
 	sta FREHI3                          // Voice 3: Frequency Control - High-Byte
-	lda $1D6D,Y
+	lda table_1D6D,Y
 	sta VCREG3                          // Voice 3: Control Register
-	lda $1D75,Y
+	lda table_1D75,Y
 	sta ATDCY3                          // Voice 3: Attack / Decay Cycle Control
 	lda #$F1
 	sta SUREL3                          // Voice 3: Sustain / Release Cycle Control
@@ -3875,10 +3897,16 @@ L_BRS_1D46_1D58:
 	ldx $E0
 	rts
 
-// 1D65
+table_1D65:
 
 	.byte $23,$31,$43,$52,$7A,$9E,$B6,$DE
+
+table_1D6D:
+
 	.byte $11,$21,$11,$21,$11,$21,$11,$21
+
+table_1D75:
+
 	.byte $00,$00,$10,$10,$20,$20,$30,$30
 
 L_JSR_1D7D_0CEB:
@@ -3897,7 +3925,11 @@ L_JSR_1D7D_0CEB:
 
 // 1D95
 
-	.byte $00,$23,$55,$31,$3A,$35,$2C,$30	// $00,$23,U1:5,0	channel,drive
+	.byte $00,$23
+
+BlockRead:	// 1D97
+
+	.byte $55,$31,$3A,$35,$2C,$30		// U1:5,0	channel,drive
 	.byte $2C,$31,$38,$2C,$31,$38,$2C,$31	// ,18,18,1	t,s=18,18
 	.byte $38,$FF,$7D,$06,$05,$20,$A7,$04	// 8
 	.byte $EF,$00,$5F,$25,$FF,$0E,$00,$04
@@ -4350,7 +4382,11 @@ L_JSR_1D7D_0CEB:
 	.byte $00,$01,$80,$00,$01,$C0,$00,$02
 	.byte $A0,$00,$04,$58,$D9,$05,$18,$00
 	.byte $00,$1C,$00,$00,$10,$00,$00,$30
-	.byte $00,$03,$E0,$00,$07,$F0,$00,$0F
+	.byte $00,$03,$E0
+	
+// v_2BC0:
+	
+	.byte $00,$07,$F0,$00,$0F
 	.byte $80,$00,$12,$40,$00,$E4,$20,$D9
 	.byte $05,$18,$00,$00,$1C,$00,$00,$10
 	.byte $00,$00,$30,$00,$03,$E0,$00,$07
@@ -4514,7 +4550,11 @@ L_JSR_1D7D_0CEB:
 	.byte $01,$D9,$08,$D8,$08,$C3,$C3,$C3
 	.byte $C3,$F0,$D8,$0B,$FC,$FC,$D8,$06
 	.byte $00,$00,$03,$C0,$03,$C0,$D8,$03
-	.byte $3F,$D8,$06,$DA,$EA,$CF,$E0,$C4
+	.byte $3F,$D8,$06,$DA
+	
+table_30E1:
+	
+	.byte $EA,$CF,$E0,$C4
 	.byte $D3,$F3,$C1,$E0,$A1,$0F,$54,$00
 	.byte $94,$03,$4F,$28,$05,$01,$8A,$0E
 	.byte $21,$F0,$10,$02,$AA,$00,$C4,$03
@@ -4526,7 +4566,11 @@ L_JSR_1D7D_0CEB:
 	.byte $60,$01,$FC,$AB,$41,$01,$30,$1F
 	.byte $28,$0A,$30,$00,$6A,$00,$E3,$00
 	.byte $10,$3A,$42,$00,$CF,$83,$C3,$47
-	.byte $53,$8F,$33,$47,$CC,$C0,$EB,$F3
+	.byte $53,$8F,$33,$47
+	
+table_3141:
+	
+	.byte $CC,$C0,$EB,$F3
 	.byte $DD,$CE,$DD,$FF,$3E,$EB,$55,$AA
 	.byte $55,$AA,$55,$FF,$90,$13,$C3,$DE
 	.byte $7D,$BE,$7D,$FF,$D5,$AA,$55,$AA
@@ -4658,7 +4702,7 @@ L_BRS_3292_328D:
 
 L_BRS_329D_32A4:
 
-	lda $3A04,X
+	lda table_3A04,X
 	sta $0500,X
 	dex
 	bpl L_BRS_329D_32A4
@@ -4776,16 +4820,16 @@ L_JMP_3342_3367:
 
 	jsr L_JSR_6200_3342
 	ldy $F0
-	and $35C5,Y
+	and table_35C5,Y
 	clc
-	adc $35C9,Y
+	adc table_35C5 + 4,Y
 	sty $E0
 	ldy $CE
 	cpy #$06
 	bcc L_BRS_335C_3354
 	ldy $E0
 	clc
-	adc $35CD,Y
+	adc table_35C5 + 8,Y
 
 L_BRS_335C_3354:
 
@@ -4840,7 +4884,7 @@ L_BRS_3392_338D:
 	inc $05FC
 	jsr L_JSR_6200_33A8
 	ldy $CE
-	and $3649,Y
+	and table_3649,Y
 	sta $0F
 	lda #$40
 
@@ -4914,7 +4958,7 @@ L_BRS_33E7_33F2:
 	bne L_BRS_3426_3409
 	jsr L_JSR_3671_340B
 	ldy $CE
-	and $3653,Y
+	and table_3653,Y
 	bne L_BRS_3419_3413
 	lda #$81
 	bmi L_BRS_341B_3417
@@ -4978,7 +5022,7 @@ L_BRS_345D_344D:
 	and #$03
 	clc
 	ldy $CE
-	adc $365D,Y
+	adc table_365D,Y
 	sta $E3
 
 L_JMP_346A_3487:
@@ -5010,7 +5054,7 @@ L_BRS_348A_347A:
 	and #$01
 	clc
 	ldy $CE
-	adc $3667,Y
+	adc table_3667,Y
 	sta $E3
 
 L_BRS_3497_34A3:
@@ -5025,9 +5069,9 @@ L_BRS_3497_34A7:
 	dec $E3
 	bpl L_BRS_3497_34A7
 	ldx $CE
-	lda $368F,X
+	lda table_368F,X
 	sta $0204
-	ldy $367B,X
+	ldy table_367B,X
 	tya
 	and #$0F
 	sta $0E
@@ -5042,13 +5086,13 @@ L_BRS_3497_34A7:
 	ldx #$13
 	jsr L_JSR_6307_34CD
 	ldy $CE
-	lda $479B,Y
+	lda table_479B,Y
 	sta $0400
 
 L_JSR_34D8_32A6:
 
 	lda #$DA
-	sta $2BC0
+	sta v_2BC0
 	jsr L_JSR_723B_34DD
 	lda $E5
 	asl
@@ -5069,9 +5113,9 @@ L_JSR_34D8_32A6:
 L_BRS_34FE_34F8:
 L_BRS_34FE_34FA:
 
-	lda $47A5,Y
+	lda table_47A5,Y
 	sta $E0
-	lda $47AF,Y
+	lda table_47AF,Y
 	sta $E1
 	ldy #$77
 
@@ -5085,9 +5129,9 @@ L_BRS_350A_3510:
 
 L_BRS_3514_351E:
 
-	lda $3687,X
-	sta $83F8,X
-	sta $C3F8,X
+	lda table_3687,X
+	sta RAM8000 + $3F8,X
+	sta RAMC000 + $3F8,X
 	dex
 	bpl L_BRS_3514_351E
 	rts
@@ -5187,9 +5231,10 @@ L_BRS_35C3_35BD:
 	dex
 	rts
 
-// 35C5
+table_35C5:
 
-	.byte $00,$03,$01,$01,$00,$08,$04,$03
+	.byte $00,$03,$01,$01
+	.byte $00,$08,$04,$03
 	.byte $00,$03,$02,$01
 
 L_JSR_35D1_3371:
@@ -5197,7 +5242,7 @@ L_JSR_35D1_3376:
 
 	stx $ED
 	jsr L_JSR_679B_35D3
-	ora $7DBA,X
+	ora table_7DBA,X
 	tax
 
 L_JMP_35DA_35E7:
@@ -5266,7 +5311,7 @@ L_JSR_3628_336C:
 
 L_BRS_3629_3646:
 
-	ldy $7DBA,X
+	ldy table_7DBA,X
 	bcc L_BRS_362F_362C
 	dey
 
@@ -5291,12 +5336,18 @@ L_BRS_3643_3635:
 	bcs L_BRS_3629_3646
 	rts
 
-// 3649
+table_3649:
 
 	.byte $04,$04,$04,$04,$04,$06,$06,$06
-	.byte $06,$FF,$00,$00,$08,$08,$08,$08
-	.byte $08,$FF,$FF,$FF,$06,$07,$07,$08
-	.byte $08,$09,$09,$0A,$0B,$0B,$02,$03
+	.byte $06,$FF
+table_3653:
+	.byte $00,$00,$08,$08,$08,$08
+	.byte $08,$FF,$FF,$FF
+table_365D:
+	.byte $06,$07,$07,$08
+	.byte $08,$09,$09,$0A,$0B,$0B
+table_3667:
+	.byte $02,$03
 	.byte $04,$04,$05,$05,$06,$06,$06,$06
 
 L_JSR_3671_340B:
@@ -5309,11 +5360,14 @@ L_JSR_3671_3497:
 	sta $ED
 	jmp L_JMP_6200_3678
 
-// 367B
+table_367B:
 
 	.byte $72,$73,$75,$74,$76,$7A,$7D,$77
-	.byte $72,$78,$75,$74,$10,$10,$11,$12
-	.byte $13,$14,$15,$16,$A0,$A0,$A0,$90
+	.byte $72,$78,$75,$74
+table_3687:
+	.byte $10,$10,$11,$12,$13,$14,$15,$16
+table_368F:
+	.byte $A0,$A0,$A0,$90
 	.byte $90,$90,$88,$88,$70,$70
 
 L_JSR_3699_3302:
@@ -5438,19 +5492,19 @@ L_JSR_3729_45AC:
 	php
 	sta $EE
 	clc
-	adc $60E5,X
+	adc table_60E2 + 3,X
 	sta $E0
 	sta $E4
-	lda $60FE,X
+	lda table_60FB + 3,X
 	adc #$00
 	plp
 	adc #$00
 	sta $E1
 	sta $E5
 	lda $EE
-	adc $60E4,Y
+	adc table_60E2 + 2,Y
 	sta $E2
-	lda $60FD,Y
+	lda table_60FB + 2,Y
 	adc #$00
 	sta $E3
 	lda #$27
@@ -5475,7 +5529,7 @@ L_BRS_3773_3770:
 	sta $E7
 	rts
 
-// 377E
+table_377E:
 
 	.byte $C0,$30,$0C,$03,$C0,$30,$0C,$03
 	.byte $03,$0C,$30,$C0,$03,$0C,$30,$C0
@@ -5501,8 +5555,8 @@ L_JMP_378E_31FD:
 
 L_BRS_37A9_37B3:
 
-	lda $3984,X
-	sta $3921,Y
+	lda table_3984,X
+	sta table_3921,Y
 	inx
 	iny
 	cpy #$20
@@ -5516,10 +5570,10 @@ L_BRS_37A9_37B3:
 L_BRS_37BB_37CD:
 
 	sty $EF
-	lda $39E4,Y
+	lda table_39E4,Y
 	tay
-	lda $39E4,X
-	sta $38C1,Y
+	lda table_39E4,X
+	sta table_38C1,Y
 	inx
 	ldy $EF
 	iny
@@ -5529,19 +5583,19 @@ L_BRS_37BB_37CD:
 
 L_BRS_37D1_37ED:
 
-	lda $3859,Y
+	lda table_3859,Y
 	sta $AA70,Y
 	sta $EA70,Y
-	lda $38B9,Y
+	lda table_38B9,Y
 	sta $ABB0,Y
 	sta $EBB0,Y
-	lda $3919,Y
+	lda table_3919,Y
 	sta $ACF0,Y
 	sta $ECF0,Y                          // Low Byte Screen Line Addresses
 	dey
 	bpl L_BRS_37D1_37ED
 	ldy $CE
-	lda $367C,Y
+	lda table_367B + 1,Y
 	jsr L_JSR_3841_37F4
 	lda #$00
 	sta $D4
@@ -5556,7 +5610,7 @@ L_BRS_37D1_37ED:
 	ldx #$20
 	jsr L_JSR_62F4_3811
 	ldy $CE
-	lda $368F,Y
+	lda table_368F,Y
 	sta $0204
 	lda #$00
 	ldy #$5F
@@ -5584,17 +5638,17 @@ L_JSR_3841_3837:
 
 L_BRS_3843_3856:
 
-	sta $814E,X
+	sta RAM8000 + $14E,X
 	sta $C14E,X
-	sta $8176,X
+	sta RAM8000 + $176,X
 	sta $C176,X
-	sta $819E,X
+	sta RAM8000 + $19E,X
 	sta $C19E,X
 	dex
 	bpl L_BRS_3843_3856
 	rts
 
-// 3859
+table_3859:
 
 	.byte $00,$0A,$2A,$A0,$A0,$A0,$20,$28
 	.byte $00,$80,$AA,$AA,$3C,$FF,$C3,$D7
@@ -5608,7 +5662,9 @@ L_BRS_3843_3856:
 	.byte $00,$02,$AA,$80,$00,$00,$F0,$F0
 	.byte $00,$A8,$AA,$00,$3C,$FF,$C3,$D7
 	.byte $00,$80,$A0,$A0,$28,$0A,$0A,$0A
+table_38B9:
 	.byte $28,$0A,$0A,$28,$28,$28,$A8,$A0
+table_38C1:
 	.byte $14,$00,$55,$55,$14,$00,$0F,$0F
 	.byte $00,$00,$00,$00,$00,$00,$C3,$F3
 	.byte $F0,$F0,$F0,$F0,$F0,$00,$0C,$CC
@@ -5620,7 +5676,9 @@ L_BRS_3843_3856:
 	.byte $00,$C0,$F0,$F0,$C0,$00,$CF,$CF
 	.byte $14,$00,$55,$55,$14,$00,$F0,$F0
 	.byte $0A,$0A,$0A,$28,$28,$A0,$A0,$28
+table_3919:
 	.byte $A0,$A0,$A8,$28,$0A,$0A,$02,$00
+table_3921:
 	.byte $00,$03,$0F,$0F,$0F,$00,$80,$AA
 	.byte $F3,$C3,$03,$F3,$F3,$00,$AA,$A0
 	.byte $CC,$FC,$3C,$0C,$0C,$00,$A8,$0A
@@ -5646,7 +5704,7 @@ L_BRS_3979_3981:
 	bne L_BRS_3979_3981
 	rts
 
-// 3984
+table_3984:
 
 	.byte $00,$03,$0F,$0F,$0F,$00,$80,$AA
 	.byte $F3,$C3,$03,$F3,$F3,$00,$AA,$A0
@@ -5660,10 +5718,12 @@ L_BRS_3979_3981:
 	.byte $C0,$F0,$F0,$C0,$C0,$00,$AA,$A0
 	.byte $C3,$C3,$C3,$C3,$C3,$00,$A8,$0A
 	.byte $0C,$FC,$0C,$0C,$0C,$00,$2A,$A0
+table_39E4:
 	.byte $06,$07,$0E,$0F,$16,$17,$1E,$1F
 	.byte $0F,$0F,$C3,$F3,$0C,$CC,$FC,$FF
 	.byte $0F,$0F,$C3,$F3,$F0,$FC,$FC,$FF
 	.byte $0C,$0C,$C3,$C0,$F3,$C3,$0C,$0C
+table_3A04:
 	.byte $00,$00,$00,$00,$00,$00,$00,$00
 	.byte $00,$00,$00,$00,$00,$00,$00,$00
 	.byte $01,$41,$0E,$00,$00,$00,$00,$00
@@ -5680,6 +5740,7 @@ L_BRS_3979_3981:
 	.byte $00,$00,$00,$00,$00,$00,$00,$00
 	.byte $01,$1E,$0B,$01,$22,$03,$01,$02
 	.byte $03,$15,$02,$1B,$0D,$01,$00,$00
+table_3A84:
 	.byte $00,$00,$00,$00,$00,$00,$00,$00
 	.byte $03,$03,$0D,$0E,$35,$3A,$35,$3A
 	.byte $0D,$3A,$35,$3A,$35,$0E,$0D,$0E
@@ -5891,17 +5952,17 @@ L_JMP_3FC0_4058:
 	asl
 	clc
 	adc #$84
-	sta $4011
+	sta v_4011
 	lda #$3A
 	adc #$00
-	sta $4012
-	lda $4011
+	sta v_4012
+	lda v_4011
 	sec
 	sbc $E6
-	sta $4011
-	lda $4012
+	sta v_4011
+	lda v_4012
 	sbc #$00
-	sta $4012
+	sta v_4012
 	ldx #$00
 	ldy #$00
 
@@ -5949,7 +6010,7 @@ L_BRS_400E_3FFE:
 
 L_BRS_4010_4019:
 
-	lda $3A84,X
+	lda table_3A84,X
 	sta ($E0),Y
 	inx
 	iny
@@ -5961,7 +6022,7 @@ L_BRS_4010_4019:
 	tax
 	bcc L_BRS_3FE7_4020
 	beq L_BRS_4029_4022
-	inc $4012
+	inc v_4012
 	bne L_BRS_3FE7_4027
 
 L_BRS_4029_3FF5:
@@ -6025,7 +6086,7 @@ L_BRS_4081_4063:
 	lda $04
 	ldx $05
 	clc
-	adc $43EA,X
+	adc table_43EA,X
 	sta $04
 	dec $05
 	beq L_BRS_4090_408D
@@ -6034,28 +6095,28 @@ L_BRS_4081_4063:
 L_BRS_4090_408D:
 
 	lda #$FA
-	sta $414A
+	sta v_414A
 	lda #$41
-	sta $414B
+	sta v_414B
 	jsr L_JSR_44EA_409A
 	ldx #$0E
 
 L_BRS_409F_40AC:
 
-	lda $450C,X
-	sta $8480,X
-	lda $44FD,X
-	sta $8400,X
+	lda table_450C,X
+	sta RAM8400 + $80,X
+	lda table_44FD,X
+	sta RAM8400,X
 	dex
 	bpl L_BRS_409F_40AC
 	ldx #$35
 
 L_BRS_40B0_40BD:
 
-	lda $451B,X
-	sta $84C0,X
-	lda $4551,X
-	sta $8500,X
+	lda table_451B,X
+	sta RAM8400 + $C0,X
+	lda table_4551,X
+	sta RAM8400 + $100,X
 	dex
 	bpl L_BRS_40B0_40BD
 	lda #$18
@@ -6071,7 +6132,7 @@ L_BRS_40B0_40BD:
 
 L_BRS_40DA_40E1:
 
-	lda $44DA,X
+	lda table_44DA,X
 	sta SP0X,X                          // Sprite 0 X Pos
 	dex
 	bpl L_BRS_40DA_40E1
@@ -6085,9 +6146,9 @@ L_BRS_40DA_40E1:
 	inx
 	stx $ED
 	stx $EC
-	lda $FFFE                          // Vector: IRQ
+	lda IRQ_vector                          // Vector: IRQ
 	pha
-	lda $FFFF
+	lda IRQ_vector + 1
 	pha
 	lda #$35
 	ldy #$44
@@ -6187,13 +6248,13 @@ L_BRS_4169_4164:
 	inc $ED
 	jsr L_JSR_4415_4180
 	beq L_BRS_4196_4183
-	lda $414A
+	lda v_414A
 	clc
 	adc #$10
-	sta $414A
-	lda $414B
+	sta v_414A
+	lda v_414B
 	adc #$00
-	sta $414B
+	sta v_414B
 
 L_BRS_4196_4183:
 
@@ -6327,6 +6388,9 @@ L_BRS_41EC_41E9:
 	.byte $CF,$A0,$D9,$CF,$D5,$A0,$AD,$AD
 	.byte $D4,$C9,$CD,$C5,$A0,$CD,$C1,$D3
 	.byte $D4,$C5,$D2,$A0,$D4,$C9,$CD,$A1
+
+table_43EA:
+
 	.byte $00,$00,$00,$02,$01,$FF,$FE,$03
 	.byte $02,$01,$FF,$FE,$FD,$04,$08,$08
 	.byte $08,$08,$08,$08,$08,$08,$08,$08
@@ -6341,7 +6405,7 @@ L_JSR_4415_4180:
 
 L_BRS_4419_441F:
 
-	cmp $4424,X
+	cmp table_4424,X
 	beq L_BRS_4421_441C
 	dex
 	bpl L_BRS_4419_441F
@@ -6351,7 +6415,7 @@ L_BRS_4421_441C:
 	stx $EB
 	rts
 
-// 4424
+table_4424:
 
 	.byte $03,$0A,$11,$13,$16,$17,$1F,$23
 	.byte $25,$28,$29,$2A,$2B,$2C,$2D,$2E
@@ -6429,7 +6493,7 @@ L_BRS_448B_447A:
 L_JSR_4499_4107:
 L_JSR_4499_41CC:
 
-	stx $44B3
+	stx two_zero44b3
 
 L_BRS_449C_44A1:
 
@@ -6437,8 +6501,8 @@ L_BRS_449C_44A1:
 	cpx #$90
 	bne L_BRS_449C_44A1
 	sei
-	sta $FFFE                          // Vector: IRQ
-	sty $FFFF
+	sta IRQ_vector                          // Vector: IRQ
+	sty IRQ_vector + 1
 	lda #$00
 	sta $0202
 	cli
@@ -6446,7 +6510,7 @@ L_BRS_449C_44A1:
 
 L_BRS_44B2_44D7:
 
-	lda #$20
+	lda two_zero44b3:#$20
 	cpy #$20
 	bcs L_BRS_44BE_44B6
 	cpy #$0A
@@ -6456,19 +6520,19 @@ L_BRS_44B2_44D7:
 L_BRS_44BE_44B6:
 L_BRS_44BE_44BA:
 
-	sta $8078,Y
-	sta $80A0,Y
-	sta $80C8,Y
-	sta $80F0,Y
-	sta $8118,Y
-	sta $8140,Y
-	sta $8168,Y
-	sta $8190,Y
+	sta RAM8000 + $078,Y
+	sta RAM8000 + $0A0,Y
+	sta RAM8000 + $0C8,Y
+	sta RAM8000 + $0F0,Y
+	sta RAM8000 + $118,Y
+	sta RAM8000 + $140,Y
+	sta RAM8000 + $168,Y
+	sta RAM8000 + $190,Y
 	dey
 	bpl L_BRS_44B2_44D7
 	rts
 
-// 44DA
+table_44DA:
 
 	.byte $48,$62,$18,$62,$40,$63,$18,$62
 	.byte $28,$62,$28,$74,$90,$90,$98,$98
@@ -6482,27 +6546,33 @@ L_JSR_44EA_41D4:
 
 L_BRS_44ED_44FA:
 
-	sta $8400,X
-	sta $8500,X
-	sta $C400,X
-	sta $C500,X
+	sta RAM8400 + $000,X
+	sta RAM8400 + $100,X
+	sta RAMC400 + $000,X
+	sta RAMC400 + $100,X
 	inx
 	bne L_BRS_44ED_44FA
 	rts
 
-// 44FD
+table_44FD:
 
 	.byte $AA,$AA,$00,$A8,$02,$00,$8A,$AA
-	.byte $00,$20,$22,$00,$00,$00,$00,$FF
+	.byte $00,$20,$22,$00,$00,$00,$00
+table_450C:
+	.byte $FF
 	.byte $FF,$FF,$D9,$FD,$9F,$A7,$5A,$75
-	.byte $4C,$E4,$CE,$20,$A2,$0A,$FF,$FF
+	.byte $4C,$E4,$CE,$20,$A2,$0A
+table_451B:
+	.byte $FF,$FF
 	.byte $FF,$AF,$8F,$3B,$EB,$0A,$02,$BE
 	.byte $04,$00,$0A,$F0,$00,$00,$C0,$00
 	.byte $00,$60,$00,$00,$00,$00,$00,$00
 	.byte $00,$00,$00,$00,$78,$00,$00,$38
 	.byte $00,$00,$30,$00,$00,$00,$00,$00
 	.byte $00,$00,$00,$00,$00,$00,$00,$F0
-	.byte $00,$00,$F0,$00,$00,$00,$00,$00
+	.byte $00,$00,$F0,$00
+table_4551:
+	.byte $00,$00,$00,$00
 	.byte $00,$00,$00,$00,$00,$00,$00,$00
 	.byte $3F,$C0,$00,$03,$00,$00,$0F,$00
 	.byte $00,$00,$00,$00,$00,$00,$00,$00
@@ -6547,19 +6617,19 @@ L_BRS_45B8_45B4:
 L_BRS_45BC_45E6:
 
 	sty $EF
-	lda $377E,Y
+	lda table_377E,Y
 	eor ($F8),Y
 	sta ($F8),Y
-	lda $3786,Y
+	lda table_377E + 8,Y
 	eor ($FA),Y
 	sta ($FA),Y
 	tya
 	eor #$07
 	tay
-	lda $377E,Y
+	lda table_377E,Y
 	eor ($E4),Y
 	sta ($E4),Y
-	lda $3786,Y
+	lda table_377E + 8,Y
 	eor ($FC),Y
 	sta ($FC),Y
 	jsr L_JSR_45FA_45DE
@@ -6627,7 +6697,7 @@ L_BRS_4623_462F:
 	stx VCREG1                          // Voice 1: Control Register
 	rts
 
-// 4635
+table_4635:
 
 	.byte $18,$15,$13,$15,$19,$0C,$09,$07
 	.byte $09,$19,$15,$13,$15,$18,$19,$0C
@@ -6643,7 +6713,9 @@ L_BRS_4623_462F:
 	.byte $0C,$0F,$0E,$0C,$0F,$0E,$0C,$07
 	.byte $00,$FF,$11,$12,$10,$13,$0F,$14
 	.byte $0E,$15,$0D,$16,$0C,$1D,$18,$0C
-	.byte $19,$FF,$60,$20,$40,$40,$90,$60
+	.byte $19,$FF
+table_46A7:
+	.byte$60,$20,$40,$40,$90,$60
 	.byte $20,$40,$40,$90,$2B,$2B,$2B,$40
 	.byte $30,$50,$30,$00,$60,$20,$40,$40
 	.byte $90,$60,$20,$40,$40,$90,$2B,$2B
@@ -6665,13 +6737,13 @@ L_BRS_4719_475C:
 
 	lda $DE
 	bmi L_BRS_475E_471B
-	ldx $4635,Y
+	ldx table_4635,Y
 	bmi L_BRS_475E_4720
 	cpx #$19
 	beq L_BRS_4741_4724
-	lda $475F,X
+	lda table_475F,X
 	sta FRELO1                          // Voice 1: Frequency Control - Low-Byte
-	lda $477D,X
+	lda table_477D,X
 	sta FREHI1                          // Voice 1: Frequency Control - High-Byte
 	lda #$11
 	sta VCREG1                          // Voice 1: Control Register
@@ -6683,7 +6755,7 @@ L_BRS_4719_475C:
 L_BRS_4741_4724:
 
 	sty $EF
-	lda $46A7,Y
+	lda table_46A7,Y
 	sta $E0
 
 L_BRS_4748_474F:
@@ -6704,18 +6776,25 @@ L_BRS_475E_4720:
 
 	rts
 
-// 475F
+table_475F:
 
 	.byte $8F,$4E,$18,$EF,$D2,$C3,$C3,$D1
 	.byte $EF,$1F,$60,$B5,$1E,$9C,$31,$DF
 	.byte $A5,$87,$86,$A2,$DF,$3E,$C1,$6B
-	.byte $3C,$00,$45,$7D,$79,$FE,$0C,$0D
+	.byte $3C,$00,$45,$7D,$79,$FE
+table_477D:
+	.byte $0C,$0D
 	.byte $0E,$0E,$0F,$10,$11,$12,$13,$15
 	.byte $16,$17,$19,$1A,$1C,$1D,$1F,$21
 	.byte $23,$25,$27,$2A,$2C,$2F,$32,$00
-	.byte $4B,$54,$64,$33,$00,$12,$00,$12
-	.byte $00,$12,$00,$12,$00,$24,$B9,$31
+	.byte $4B,$54,$64,$33
+table_479B:
+	.byte $00,$12,$00,$12
+	.byte $00,$12,$00,$12,$00,$24
+table_47A5:
+	.byte $B9,$31
 	.byte $A9,$B9,$31,$A9,$B9,$31,$A9,$B9
+table_47AF:
 	.byte $47,$48,$48,$47,$48,$48,$47,$48
 	.byte $48,$47,$AA,$BB,$A8,$8A,$00,$00
 	.byte $00,$00,$AA,$AA,$8A,$A8,$88,$00
@@ -7209,9 +7288,9 @@ L_BRS_5115_5110:
 
 	asl
 	tay
-	lda $67BD,Y
+	lda table_67BD,Y
 	sta $E2
-	lda $67BE,Y
+	lda table_67BD + 1,Y
 	sta $E3
 	ldx $ED
 	lda $EC
@@ -7238,8 +7317,8 @@ L_BRS_5130_512C:
 	sta $BF8C,Y
 	bcc L_BRS_5172_514B
 	tax
-	lda $67E5,X
-	sta $516E
+	lda table_67E5,X
+	sta v_516E
 	sta $BF8C,Y
 	ldy #$27
 	lda $E0
@@ -7295,7 +7374,7 @@ L_BRS_518E_5186:
 	stx $EE
 	ldy $0630,X
 	clc
-	adc $5D84,Y
+	adc table_5D84,Y
 	cmp #$B8
 	bcc L_BRS_519D_5199
 	lda #$00
@@ -7418,7 +7497,7 @@ L_JMP_5236_51C4:
 	sta $E6
 	tax
 	ldy $EA
-	lda $6E77,Y
+	lda table_6E77,Y
 	jsr L_JSR_6E5A_5248
 	ldx #$00
 	jsr L_JSR_6762_524D
@@ -7438,12 +7517,12 @@ L_BRS_5260_525C:
 	lda $0620,Y
 	and #$0F
 	tay
-	lda $68AB,Y
+	lda table_68AB,Y
 	ora $0E
 
 L_BRS_526D_5273:
 
-	ldy $6784,X
+	ldy table_6784,X
 	sta ($E4),Y
 	dex
 	bpl L_BRS_526D_5273
@@ -7499,7 +7578,7 @@ L_BRS_529B_5297:
 	lda $0630,Y
 	and #$03
 	tay
-	ldx $5D8C,Y
+	ldx table_5D8C,Y
 
 L_BRS_52D5_532C:
 
@@ -7510,8 +7589,8 @@ L_BRS_52D5_532C:
 L_BRS_52DB_52EB:
 
 	lda ($E0),Y
-	and $5D90,X
-	ora $5CD0,X
+	and table_5D90,X
+	ora table_5CD0,X
 	sta ($E0),Y
 	inx
 	iny
@@ -7523,8 +7602,8 @@ L_BRS_52DB_52EB:
 L_BRS_52EF_5301:
 
 	lda ($E2),Y
-	and $5D90,X
-	ora $5CD0,X
+	and table_5D90,X
+	ora table_5CD0,X
 	sta ($E2),Y
 	inx
 	iny
@@ -7537,8 +7616,8 @@ L_BRS_52EF_5301:
 L_BRS_5305_5313:
 
 	lda ($E4),Y
-	and $5D90,X
-	ora $5CD0,X
+	and table_5D90,X
+	ora table_5CD0,X
 	sta ($E4),Y
 	inx
 	iny
@@ -7582,7 +7661,7 @@ L_JMP_5347_518B:
 	bne L_BRS_535F_5350
 	jsr L_JSR_6200_5352
 	ldy $CE
-	cmp $5670,Y
+	cmp table_5670,Y
 	bcs L_BRS_535F_535A
 	jsr L_JSR_5626_535C
 
@@ -7654,7 +7733,7 @@ L_BRS_539E_5399:
 	tay
 	iny
 	ldx $EA
-	lda $6E77,X
+	lda table_6E77,X
 	asl
 	asl
 	ldx #$00
@@ -7689,7 +7768,7 @@ L_BRS_53D2_53A6:
 	bne L_BRS_5400_53E7
 	ldy #$15
 	ldx $EA
-	lda $6E77,X
+	lda table_6E77,X
 	asl
 	asl
 	tax
@@ -7765,7 +7844,7 @@ L_BRS_5450_5434:
 L_BRS_5450_543E:
 
 	ldy $EA
-	lda $6E77,Y
+	lda table_6E77,Y
 	ldx #$03
 	jsr L_JSR_6E5A_5457
 	ldx $EE
@@ -7810,7 +7889,7 @@ L_BRS_5487_5470:
 
 L_BRS_548D_5493:
 
-	cmp $5FD1,Y
+	cmp table_5FD1,Y
 	beq L_BRS_5498_5490
 	dey
 	bpl L_BRS_548D_5493
@@ -7975,7 +8054,7 @@ L_BRS_5569_5565:
 
 L_BRS_5574_557A:
 
-	cmp $567A,Y
+	cmp table_567A,Y
 	beq L_BRS_557E_5577
 	dey
 	bpl L_BRS_5574_557A
@@ -8024,13 +8103,13 @@ L_JMP_55A9_5535:
 
 	tay
 	ldx $EE
-	lda $5E4D,Y
+	lda table_5E44 + 9,Y
 	pha
-	lda $5E58,Y
-	ldy $5E4A,X
-	sta $5612,Y
+	lda table_5E58,Y
+	ldy table_5E44 + 6,X
+	sta screensplit_LB_HB + 2,Y
 	pla
-	sta $5611,Y
+	sta screensplit_LB_HB + 1,Y
 
 L_JMP_55BD_53C3:
 
@@ -8077,9 +8156,9 @@ L_BRS_55E3_55C9:
 	asl
 	sta SP5X,Y                          // Sprite 5 X Pos
 	lda MSIGX                          // Sprites 0-7 MSB of X coordinate
-	and $5E44,Y
+	and table_5E44,Y
 	bcc L_BRS_55FA_55F5
-	ora $5E45,Y
+	ora table_5E44 + 1,Y
 
 L_BRS_55FA_55F5:
 
@@ -8089,21 +8168,21 @@ L_BRS_55FA_55F5:
 	lda #$85
 	clc
 	adc $29
-	sta $5615
-	sta $561B
-	sta $5621
+	sta v_5615
+	sta v_561B
+	sta v_5621
 	ldy #$20
 
-L_BRS_5610_5623:
+screensplit_LB_HB:
 
 	lda $F000,Y
-	sta $8400,Y
+	sta RAM8400 + $00,Y
 	lda $F000,Y
-	sta $8440,Y
+	sta RAM8400 + $40,Y
 	lda $F000,Y
-	sta $8480,Y
+	sta RAM8400 + $80,Y
 	dey
-	bpl L_BRS_5610_5623
+	bpl screensplit_LB_HB
 	rts
 
 L_JSR_5626_535C:
@@ -8135,7 +8214,7 @@ L_BRS_5637_5631:
 	lda #$1F
 	sta $A0,X
 	ldy $CE
-	lda $565E,Y
+	lda table_565E,Y
 	sec
 	sbc $A3
 	sta $94,X
@@ -8144,18 +8223,21 @@ L_BRS_5637_5631:
 	jsr L_JSR_6200_5651
 	and #$07
 	tay
-	lda $5668,Y
+	lda table_5668,Y
 	sta SP5COL,X                          // Sprite 5 Color
 	rts
 
-// 565E
-
+table_565E:
 	.byte $A6,$A6,$A8,$A6,$A6,$A8,$A6,$A6
-	.byte $A8,$A6,$01,$03,$05,$0D,$07,$04
-	.byte $0E,$0A,$12,$50,$E0,$1C,$58,$E8
-	.byte $24,$60,$F0,$F8,$0C,$18,$24,$30
-	.byte $3C,$48,$54,$60,$6C,$78,$84,$90
-	.byte $9C,$A8,$B4,$C0
+	.byte $A8,$A6
+table_5668:
+	.byte $01,$03,$05,$0D,$07,$04,$0E,$0A
+table_5670:
+	.byte $12,$50,$E0,$1C,$58,$E8
+	.byte $24,$60,$F0,$F8
+table_567A:
+	.byte $0C,$18,$24,$30,$3C,$48,$54,$60
+	.byte $6C,$78,$84,$90,$9C,$A8,$B4,$C0
 
 L_JSR_568A_53FD:
 L_JSR_568A_5427:
@@ -8353,9 +8435,13 @@ L_BRS_56C7_56D1:
 	.byte $A0,$C9,$CE,$C3,$A0,$C2,$C1,$C2
 	.byte $D9,$AC,$D8,$8D,$CE,$D2,$B1,$A0
 	.byte $D2,$D4,$D3,$8D,$D3,$C3,$CF,$CE
-	.byte $A0,$CC,$C4,$C1,$A0,$A3,$A4,$F2
+	.byte $A0,$CC,$C4,$C1,$A0,$A3,$A4
+table_5AD6:	
+	.byte $F2
 	.byte $25,$9D,$40,$11,$E9,$BD,$8B,$58
-	.byte $D5,$F6,$17,$38,$73,$5A,$5B,$5C
+	.byte $D5,$F6,$17,$38,$73
+table_5AE4:
+	.byte $5A,$5B,$5C
 	.byte $5C,$5C,$5B,$5B,$5B,$5B,$5E,$5E
 	.byte $5F,$5F,$5C,$00,$40,$40,$00,$10
 	.byte $10,$00,$10,$10,$00,$40,$40,$01
@@ -8417,7 +8503,9 @@ L_BRS_56C7_56D1:
 	.byte $40,$05,$43,$40,$09,$3D,$40,$09
 	.byte $39,$20,$0A,$01,$20,$0A,$29,$20
 	.byte $0A,$01,$20,$08,$00,$10,$00,$00
-	.byte $10,$00,$03,$0D,$35,$35,$D7,$F1
+	.byte $10
+table_5CD0:
+	.byte $00,$03,$0D,$35,$35,$D7,$F1
 	.byte $D5,$D4,$D5,$F5,$33,$35,$0F,$00
 	.byte $FC,$C7,$51,$55,$15,$C7,$73,$5D
 	.byte $5D,$77,$D7,$54,$75,$45,$FF,$00
@@ -8439,9 +8527,14 @@ L_BRS_56C7_56D1:
 	.byte $15,$F1,$5C,$77,$D7,$55,$57,$55
 	.byte $D3,$55,$55,$D5,$53,$FC,$00,$C0
 	.byte $C0,$70,$70,$5C,$3C,$5C,$4C,$70
-	.byte $70,$70,$C0,$00,$00,$01,$02,$03
-	.byte $05,$06,$07,$08,$08,$00,$2D,$5A
-	.byte $87,$FF,$FC,$F0,$C0,$C0,$00,$00
+	.byte $70,$70,$C0,$00,$00
+table_5D84:
+	.byte $01,$02,$03
+	.byte $05,$06,$07,$08,$08
+table_5D8C:
+	.byte $00,$2D,$5A,$87
+table_5D90:
+	.byte $FF,$FC,$F0,$C0,$C0,$00,$00
 	.byte $00,$00,$00,$00,$C0,$C0,$F0,$FF
 	.byte $03,$00,$00,$00,$00,$00,$00,$00
 	.byte $00,$00,$00,$00,$00,$00,$00,$FF
@@ -8463,10 +8556,14 @@ L_BRS_56C7_56D1:
 	.byte $00,$00,$00,$00,$00,$00,$00,$00
 	.byte $00,$00,$00,$00,$00,$03,$FF,$3F
 	.byte $3F,$0F,$0F,$03,$03,$03,$03,$0F
-	.byte $0F,$0F,$3F,$FF,$FF,$DF,$20,$BF
+	.byte $0F,$0F,$3F,$FF,$FF
+table_5E44:
+	.byte $DF,$20,$BF
 	.byte $40,$7F,$80,$00,$06,$0C,$63,$84
 	.byte $A5,$C6,$E7,$08,$29,$4A,$6B,$8C
-	.byte $AD,$5E,$5E,$5E,$5E,$5E,$5F,$5F
+	.byte $AD
+table_5E58:
+	.byte $5E,$5E,$5E,$5E,$5E,$5F,$5F
 	.byte $5F,$5F,$5F,$5F,$FC,$00,$00,$86
 	.byte $00,$00,$02,$00,$00,$02,$00,$00
 	.byte $02,$1C,$00,$02,$76,$00,$02,$C2
@@ -8513,30 +8610,39 @@ L_BRS_56C7_56D1:
 	.byte $21,$00,$94,$23,$00,$D2,$23,$00
 	.byte $CA,$45,$00,$C1,$91,$00,$B1,$22
 	.byte $00,$4F,$84,$00,$50,$7C,$00,$20
-	.byte $00,$00,$22,$49,$70,$9A,$C5,$94
+	.byte $00,$00
+table_5FD1:
+	.byte $22,$49,$70,$9A,$C5,$94
 	.byte $F7,$14,$77,$04,$DE,$4F,$EF,$5F
 	.byte $FF,$04,$97,$01,$FD,$04,$57,$05
 	.byte $B5,$04,$6D,$10,$B7,$DD,$FF,$45
 	.byte $95,$05,$FE,$10,$05,$04,$FF,$04
 	.byte $5C,$95,$DF,$94,$B5,$4F,$B5,$4F
-	.byte $FF,$00,$14,$41,$41,$41,$41,$41
-	.byte $14,$00,$04,$14,$04,$04,$04,$04
-	.byte $15,$00,$14,$41,$01,$14,$40,$40
-	.byte $55,$00,$54,$01,$01,$14,$01,$01
-	.byte $54,$00,$04,$14,$44,$44,$55,$04
-	.byte $04,$00,$55,$40,$54,$01,$01,$41
-	.byte $14,$00,$05,$10,$40,$54,$41,$41
-	.byte $14,$00,$55,$01,$04,$10,$10,$10
-	.byte $10,$00,$14,$41,$41,$14,$41,$41
-	.byte $14,$00,$14,$41,$41,$15,$01,$04
-	.byte $50,$00,$00,$10,$10,$54,$10,$10
-	.byte $00,$00,$00,$00,$00,$54,$00,$00
-	.byte $00,$00,$2B,$00,$00,$00,$FF,$18
-	.byte $00,$08,$00,$01,$00,$03,$00,$00
-	.byte $00,$00,$00,$FF,$FF,$FF,$01,$0D
-	.byte $06,$06,$0E,$0D,$0F,$01,$01,$01
+	.byte $FF
 
-//IRQ
+table_6000:
+	
+	.byte $00,$14,$41,$41,$41,$41,$41,$14
+	.byte $00,$04,$14,$04,$04,$04,$04,$15
+	.byte $00,$14,$41,$01,$14,$40,$40,$55
+	.byte $00,$54,$01,$01,$14,$01,$01,$54
+	.byte $00,$04,$14,$44,$44,$55,$04,$04
+	.byte $00,$55,$40,$54,$01,$01,$41,$14
+	.byte $00,$05,$10,$40,$54,$41,$41,$14
+	.byte $00,$55,$01,$04,$10,$10,$10,$10
+	.byte $00,$14,$41,$41,$14,$41,$41,$14
+	.byte $00,$14,$41,$41,$15,$01,$04,$50
+	.byte $00,$00,$10,$10,$54,$10,$10,$00
+	.byte $00,$00,$00,$00,$54,$00,$00,$00
+
+table_6060:
+
+	.byte $00,$2B,$00,$00,$00,$FF,$18,$00
+	.byte $08,$00,$01,$00,$03,$00,$00,$00
+	.byte $00,$00,$FF,$FF,$FF,$01,$0D,$06
+	.byte $06,$0E,$0D,$0F,$01,$01,$01
+
+IRQ_607F:
 
 	pha
 	txa
@@ -8578,27 +8684,26 @@ L_BRS_60B4_60A0:
 	pla
 	rti
 
-// 60C2
-
+table_60C2:
 	.byte $7F,$FF,$FF,$00,$00,$E0,$EF,$42
 	.byte $00,$00,$00,$01,$00,$7F,$01,$01
-
-// 60D2
-
+table_60D2:
 	.byte $97,$BD,$3F,$03,$AE,$BD,$01,$E6
 	.byte $00,$00,$00,$11,$00,$7F,$01,$01
-
-// 60E2
-
+table_60E2:
 	.byte $00,$40,$80,$C0,$00,$40,$80,$C0
 	.byte $00,$40,$80,$C0,$00,$40,$80,$C0
 	.byte $00,$40,$80,$C0,$00,$40,$80,$C0
-	.byte $00,$A0,$A1,$A2,$A3,$A5,$A6,$A7
+	.byte $00
+table_60FB:
+	.byte $A0,$A1,$A2,$A3,$A5,$A6,$A7
 	.byte $A8,$AA,$AB,$AC,$AD,$AF,$B0,$B1
 	.byte $B2,$B4,$B5,$B6,$B7,$B9,$BA,$BB
-	.byte $BC,$BE,$BF,$DF,$FD,$FD,$7F,$7F
-	.byte $FE,$FE,$04,$20,$10,$04,$10,$80
-	.byte $40,$08
+	.byte $BC,$BE
+table_6114:
+	.byte $BF,$DF,$FD,$FD,$7F,$7F,$FE,$FE
+table_611C:
+	.byte $04,$20,$10,$04,$10,$80,$40,$08
 
 L_JSR_6124_0902:
 
@@ -8607,10 +8712,10 @@ L_JSR_6124_0902:
 L_JSR_6126_3286:
 L_BRS_6126_614E:
 
-	lda $60E2,X
+	lda table_60E2,X
 	sta $E0
 	sta $E2
-	lda $60FB,X
+	lda table_60FB,X
 	sta $E1
 	ora #$40
 	sta $E3
@@ -8656,39 +8761,39 @@ L_JSR_615D_34B9:
 L_BRS_615F_619D:
 
 	tya
-	sta $8000,X
-	sta $8100,X
-	sta $8200,X
-	sta $C000,X
-	sta $C100,X
-	sta $C200,X
+	sta RAM8000 + $000,X
+	sta RAM8000 + $100,X
+	sta RAM8000 + $200,X
+	sta RAMC000 + $000,X
+	sta RAMC000 + $100,X
+	sta RAMC000 + $200,X
 	cpx #$98
 	bcc L_BRS_6182_6174
 	cpx #$C0
 	bcc L_BRS_617F_6178
-	lda $6DC9,X
+	lda table_6DC9,X
 	bne L_BRS_6182_617D
 
 L_BRS_617F_6178:
 
-	lda $6DF1,X
+	lda table_6DF1,X
 
 L_BRS_6182_6174:
 L_BRS_6182_617D:
 
-	sta $8300,X
-	sta $C300,X
+	sta RAM8000 + $300,X
+	sta RAMC000 + $300,X
 	lda #$01
-	sta $D800,X
-	sta $D900,X
-	sta $DA00,X
+	sta COLRAM + $000,X
+	sta COLRAM + $100,X
+	sta COLRAM + $200,X
 	cpx #$98
 	bcc L_BRS_6199_6195
 	lda #$04
 
 L_BRS_6199_6195:
 
-	sta $DB00,X
+	sta COLRAM + $300,X
 	inx
 	bne L_BRS_615F_619D
 	rts
@@ -8735,16 +8840,16 @@ L_JSR_61C2_6A27:
 L_JMP_61C6_61E1:
 L_JSR_61C6_6BE3:
 
-	sta $61D5
+	sta v_61D5
 	ora #$01
-	sta $61DC
+	sta v_61F2
 	lda $E0,X
 	clc
-	adc $61E4,Y
-	sta $E0
+	adc table_61E4,Y
+	sta v_61D5:$E0
 	lda $E1,X
-	adc $61F2,Y
-	sta $E1
+	adc table_61F2,Y
+	sta v_61F2:$E1
 	rts
 
 L_JSR_61DE_0934:
@@ -8761,14 +8866,14 @@ L_JSR_61DE_71D0:
 	txa
 	ora #$E0
 	jmp L_JMP_61C6_61E1
-	rti
 
-// 61E5
+table_61E4:
 
-	.byte $08,$01,$01,$01,$01,$01,$01,$01
-	.byte $39,$01,$C8,$40,$38,$01,$00,$00
-	.byte $00,$00,$00,$00,$00,$00,$01,$00
-	.byte $FE,$FC,$FC
+	.byte $40,$08,$01,$01,$01,$01,$01,$01
+	.byte $01,$39,$01,$C8,$40,$38
+table_61F2:
+	.byte $01,$00,$00,$00,$00,$00,$00,$00
+	.byte $00,$01,$00,$FE,$FC,$FC
 
 L_JSR_6200_0B77:
 L_JSR_6200_0C3A:
@@ -8828,21 +8933,32 @@ L_JSR_6200_7C7D:
 	inc $DF
 	rts
 
-// 6213
+table_6213:
 
 	.byte $0D,$2D,$4D,$6D,$B0,$F0,$30,$70
-	.byte $A8,$AE,$B5,$BB,$00,$0B,$0A,$09
+	.byte $A8,$AE,$B5,$BB
+table_621F:
+	.byte $00,$0B,$0A,$09
 	.byte $0A,$0B,$0A,$09,$0A,$0B,$0A,$09
-	.byte $0A,$0B,$00,$00,$01,$01,$02,$02
+	.byte $0A,$0B
+table_622D:
+	.byte $00,$00,$01,$01,$02,$02
 	.byte $03,$04,$05,$07,$09,$0B,$0B,$0B
 	.byte $0B,$0B,$0B,$0B,$0B,$0B,$0B,$0B
-	.byte $0B,$0B,$0B,$0B,$0B,$0B,$1F,$47
-	.byte $47,$6F,$6F,$97,$97,$00,$00,$05
+	.byte $0B,$0B,$0B,$0B,$0B,$0B
+table_6249:
+	.byte $1F,$47
+	.byte $47,$6F,$6F,$97,$97
+table_6250:
+	.byte $00,$00,$05
 	.byte $06,$0B,$0C,$11,$12,$17,$18,$1D
-	.byte $1E,$23,$25,$28,$0F,$0C,$0C,$0C
+	.byte $1E,$23,$25,$28
+table_625F:
+	.byte $0F,$0C,$0C,$0C
 	.byte $0C,$0C,$0F,$FF,$00,$00,$00,$00
 	.byte $00,$FF,$FC,$0C,$0C,$0C,$0C,$0C
 	.byte $FC,$00,$00,$00,$00,$00,$00,$00
+table_627B:
 	.byte $00,$07,$07,$07,$07,$0E,$15,$00
 	.byte $07,$07,$07,$07,$07,$07,$0E,$15
 	.byte $00,$07,$07,$07,$07,$07,$07,$07
@@ -8854,14 +8970,13 @@ L_JSR_62A3_6346:
 	asl
 	asl
 	asl
-	sta $62B2
+	sta LOOP_62B1 + 1
 	lda #$67
 	rol
-	sta $62B3
+	sta LOOP_62B1 + 2
 	ldx #$00
 
-L_BRS_62B1_62BE:
-L_BRS_62B1_62C7:
+LOOP_62B1:
 
 	lda $F000,X
 	sta ($E0),Y
@@ -8870,11 +8985,11 @@ L_BRS_62B1_62C7:
 	cpx #$08
 	beq L_BRS_62C9_62BA
 	cpx #$04
-	bne L_BRS_62B1_62BE
+	bne LOOP_62B1
 	ldy #$00
 	jsr L_JSR_61C2_62C2
 	ldx #$04
-	bne L_BRS_62B1_62C7
+	bne LOOP_62B1
 
 L_BRS_62C9_62BA:
 
@@ -8905,7 +9020,7 @@ L_JSR_62DB_1349:
 
 	and #$0F
 	ora #$30
-	sta $6526
+	sta v_6526
 	lda $1D
 	lsr
 	lsr
@@ -8917,7 +9032,7 @@ L_JSR_62DB_1349:
 L_BRS_62EC_62E8:
 
 	eor #$30
-	sta $6525
+	sta v_6525
 	ldx #$21
 
 L_BRS_62F3_62D9:
@@ -8933,7 +9048,7 @@ L_BRS_62F4_62D7:
 	lda $D0
 	clc
 	adc #$31
-	sta $652C
+	sta v_652C
 	lda #$06
 	sta $E8
 	lda #$00
@@ -8941,7 +9056,7 @@ L_BRS_62F4_62D7:
 L_JMP_6302_61BF:
 
 	ldy #$BD
-	jmp L_JMP_632A_6304
+	jmp LOOP_632A
 
 L_JSR_6307_1142:
 L_JSR_6307_12B5:
@@ -8977,7 +9092,7 @@ L_JSR_6307_7061:
 	sta $0200
 	lda $CE
 	ora #$30
-	sta $6496
+	sta v_6496
 	clc
 	adc #$01
 	cmp #$39
@@ -8986,28 +9101,27 @@ L_JSR_6307_7061:
 
 L_BRS_631E_631A:
 
-	sta $64DC
+	sta v_64DC
 	lda #$0F
 	sta $E8
 	lda #$48
 	jmp L_JMP_61A0_6327
 
-L_JMP_632A_6304:
-L_JMP_632A_65AF:
+LOOP_632A:
 
 	sta $E0
 	sty $E1
-	lda $6352,X
-	sta $6341
-	lda $6377,X
-	sta $6342
+	lda table_6352,X
+	sta v_6341
+	lda table_6377,X
+	sta v_6341 + 1
 	ldx #$00
 	stx $E9
 
 L_BRS_633E_634F:
 
 	ldy #$04
-	lda $F000,X
+	lda v_6341:$F000,X
 	inx
 	and #$3F
 	jsr L_JSR_62A3_6346
@@ -9017,13 +9131,15 @@ L_BRS_633E_634F:
 	bne L_BRS_633E_634F
 	rts
 
-// 6352
+table_6352:
 
 	.byte $00,$9C,$A8,$B5,$C3,$D1,$DF,$ED
 	.byte $FC,$0B,$1A,$28,$36,$44,$51,$5F
 	.byte $6D,$7B,$7B,$89,$98,$A7,$B6,$C4
 	.byte $D0,$DD,$EB,$F8,$06,$FA,$09,$00
-	.byte $15,$1B,$21,$27,$2D,$00,$63,$63
+	.byte $15,$1B,$21,$27,$2D
+table_6377:
+	.byte $00,$63,$63
 	.byte $63,$63,$63,$63,$63,$63,$64,$64
 	.byte $64,$64,$64,$64,$64,$64,$00,$64
 	.byte $64,$64,$64,$64,$64,$64,$64,$64
@@ -9059,16 +9175,22 @@ L_BRS_633E_634F:
 	.byte $A0,$A0,$CC,$C5,$C1,$D6,$C5,$A0
 	.byte $C3,$CC,$C9,$C6,$C6,$BF,$A0,$A0
 	.byte $D3,$CB,$C9,$CC,$CC,$A0,$CC,$C5
-	.byte $D6,$C5,$CC,$A0,$B1,$A0,$C1,$C2
+	.byte $D6,$C5,$CC,$A0
+v_6496:
+	.byte $B1,$A0,$C1,$C2
 	.byte $C1,$CE,$C4,$CF,$CE,$C5,$C4,$A0
 	.byte $C3,$CC,$C9,$C6,$C6,$C2,$CF,$CE
-	.byte $D5,$D3,$A0,$B1,$B0,$A0,$D0,$CF
+	.byte $D5,$D3,$A0
+v_64AD:
+	.byte $B1,$B0,$A0,$D0,$CF
 	.byte $C9,$CE,$D4,$D3,$C2,$D5,$D2,$CE
 	.byte $D4,$A0,$D4,$CF,$A0,$C4,$C5,$C1
 	.byte $D4,$C8,$A0,$A0,$A0,$D3,$CD,$C1
 	.byte $D3,$C8,$C5,$C4,$A1,$A0,$A0,$A0
 	.byte $A0,$D4,$CF,$A0,$CC,$C5,$D6,$C5
-	.byte $CC,$A0,$B1,$A0,$A0,$D3,$D4,$C1
+	.byte $CC,$A0
+v_64DC:
+	.byte $B1,$A0,$A0,$D3,$D4,$C1
 	.byte $D2,$D4,$A0,$C1,$A0,$C6,$C9,$D2
 	.byte $C5,$A0,$A0,$C4,$C5,$D6,$CF,$CC
 	.byte $D5,$D4,$C9,$CF,$CE,$A0,$A0,$A0
@@ -9077,8 +9199,11 @@ L_BRS_633E_634F:
 	.byte $C9,$CE,$CE,$C9,$CE,$C7,$A0,$C7
 	.byte $C1,$CD,$C5,$A0,$A0,$AD,$AD,$A0
 	.byte $A0,$AD,$D7,$CF,$CF,$C4,$AD,$C5
-	.byte $C7,$C7,$D3,$A0,$A0,$CC,$C9,$C6
-	.byte $C5,$A0,$A0,$00,$00,$00,$00
+	.byte $C7,$C7,$D3
+table_6525:
+	.byte $A0,$A0,$CC,$C9,$C6,$C5,$A0
+table_652C:
+	.byte $A0,$00,$00,$00,$00
 
 L_JSR_6531_0EE2:
 L_JSR_6531_18EF:
@@ -9155,28 +9280,28 @@ L_BRS_657A_658B:
 	dex
 	dec $F7
 	bne L_BRS_657A_658B
-	lda $6530
+	lda v_6530
 	cmp #$20
 	bne L_BRS_6599_6592
 	lda #$30
-	sta $6530
+	sta v_6530
 
 L_BRS_6599_6592:
 
 	inx
-	lda $6F0F,X
-	ldy $6F10,X
+	lda table_6F0F,X
+	ldy table_6F0F + 1,X
 	cpx #$02
 	bne L_BRS_65A9_65A2
 	ldx #$25
-	stx $6530
+	stx v_6530
 
 L_BRS_65A9_65A2:
 
 	ldx #$04
 	stx $E8
 	ldx #$24
-	jmp L_JMP_632A_65AF
+	jmp LOOP_632A
 	.byte $00,$00                 // unknown so far
 
 L_JSR_65B4_6581:
@@ -9200,7 +9325,7 @@ L_BRS_65BD_65B6:
 	lda $D1
 	bpl L_BRS_65D4_65CD
 	lda #$2D
-	sta $652C,Y
+	sta table_652C,Y
 
 L_BRS_65D4_65C5:
 L_BRS_65D4_65C9:
@@ -9212,18 +9337,19 @@ L_BRS_65D4_65CD:
 
 L_JMP_65D9_65BA:
 
-	sta $652D,Y
+	sta table_652C + 1,Y
 	iny
 	rts
 
-// 65DE
+table_65DE:
 
 	.byte $00,$33,$FF,$66,$32,$99,$65,$CC
 	.byte $98,$CB,$FE,$31,$64,$97,$62,$95
-	.byte $C8,$FB,$2E,$61,$94,$C7,$B2,$86
-	.byte $86,$86,$86,$87,$86,$87,$86,$87
-	.byte $87,$87,$88,$88,$88,$93,$93,$93
-	.byte $93,$94,$94,$94,$94,$8B
+	.byte $C8,$FB,$2E,$61,$94,$C7,$B2
+table_65F5:
+	.byte $86,$86,$86,$86,$87,$86,$87,$86
+	.byte $87,$87,$87,$88,$88,$88,$93,$93
+	.byte $93,$93,$94,$94,$94,$94,$8B
 
 L_JSR_660C_08A5:
 L_JSR_660C_32BA:
@@ -9231,10 +9357,10 @@ L_JSR_660C_7245:
 L_JSR_660C_72A1:
 L_JSR_660C_72AA:
 
-	sta $6621
-	sta $6638
-	stx $6622
-	stx $6639
+	sta FOO
+	sta DOO
+	stx FOO + 1
+	stx DOO + 1
 	ldx #$00
 	stx $E0
 	sty $E1
@@ -9244,11 +9370,11 @@ L_BRS_6620_6651:
 L_BRS_6620_6658:
 L_BRS_6620_665C:
 
-	lda $F000,X
+	lda FOO:$F000,X
 	inx
 	bne L_BRS_662C_6624
-	inc $6622
-	inc $6639
+	inc FOO+1
+	inc DOO+1
 
 L_BRS_662C_6624:
 
@@ -9258,11 +9384,11 @@ L_BRS_662C_6624:
 	bcs L_BRS_6653_6632
 	sbc #$00
 	pha
-	lda $F000,X
+	lda DOO:$F000,X
 	inx
 	bne L_BRS_6643_663B
-	inc $6622
-	inc $6639
+	inc FOO+1
+	inc DOO+1
 
 L_BRS_6643_663B:
 
@@ -9326,27 +9452,33 @@ L_BRS_6668_6678:
 	bne L_BRS_6668_6678
 	rts
 
-// 667B
-
+table_667B:
 	.byte $6A,$8B,$B2,$8B,$FA,$8B,$42,$8C
 	.byte $8A,$8C,$D2,$8C,$1A,$8D,$62,$8D
 	.byte $AA,$8D,$F2,$8D,$3A,$8E,$82,$8E
 	.byte $CA,$8E,$12,$8F,$5A,$8F,$A2,$8F
 	.byte $1A,$90,$92,$90,$0A,$91,$82,$91
-	.byte $FA,$91,$72,$92,$EA,$92,$82,$8B
-	.byte $CA,$8B,$12,$8C,$5A,$8C,$A2,$8C
-	.byte $EA,$8C,$32,$8D,$7A,$8D,$C2,$8D
-	.byte $0A,$8E,$52,$8E,$9A,$8E,$E2,$8E
-	.byte $2A,$8F,$72,$8F,$CA,$8F,$42,$90
-	.byte $BA,$90,$32,$91,$AA,$91,$22,$92
-	.byte $9A,$92,$12,$93,$9A,$8B,$E2,$8B
-	.byte $2A,$8C,$72,$8C,$BA,$8C,$02,$8D
-	.byte $4A,$8D,$92,$8D,$DA,$8D,$22,$8E
-	.byte $6A,$8E,$B2,$8E,$FA,$8E,$42,$8F
-	.byte $8A,$8F,$F2,$8F,$6A,$90,$E2,$90
-	.byte $5A,$91,$D2,$91,$4A,$92,$C2,$92
-	.byte $3A,$93,$04,$02,$00,$00,$06,$0E
-	.byte $16,$16,$0E,$0E,$06
+	.byte $FA,$91,$72,$92,$EA,$92
+table_66A9:
+	.byte $82,$8B,$CA,$8B,$12,$8C,$5A,$8C
+	.byte $A2,$8C,$EA,$8C,$32,$8D,$7A,$8D
+	.byte $C2,$8D,$0A,$8E,$52,$8E,$9A,$8E
+	.byte $E2,$8E,$2A,$8F,$72,$8F,$CA,$8F
+	.byte $42,$90,$BA,$90,$32,$91,$AA,$91
+	.byte $22,$92,$9A,$92,$12,$93
+table_66D7:
+	.byte $9A,$8B,$E2,$8B,$2A,$8C,$72,$8C
+	.byte $BA,$8C,$02,$8D,$4A,$8D,$92,$8D
+	.byte $DA,$8D,$22,$8E,$6A,$8E,$B2,$8E
+	.byte $FA,$8E,$42,$8F,$8A,$8F,$F2,$8F
+	.byte $6A,$90,$E2,$90,$5A,$91,$D2,$91
+	.byte $4A,$92,$C2,$92,$3A,$93
+table_6705:
+	.byte $04,$02
+table_6707:
+	.byte $00,$00
+	.byte $06,$0E,$16,$16,$0E,$0E
+	.byte $06
 
 L_BRS_6710_671B:
 
@@ -9388,7 +9520,7 @@ L_BRS_6740_674B:
 	bpl L_BRS_6740_674B
 	jmp L_JMP_6AC0_674D
 
-// 6750
+table_6750:
 
 	.byte $00,$00,$00,$08,$00,$00,$00,$00
 	.byte $00,$00,$00,$00,$00,$00,$00,$00
@@ -9422,14 +9554,15 @@ L_JSR_6762_6CE4:
 	lda $20
 	and #$07
 	tay
-	lda $6793,Y
+	lda table_6793,Y
 	rts
 
-// 6784
+table_6784:
 
 	.byte $00,$01,$02,$28,$29,$2A,$50,$51
-	.byte $52,$03,$04,$2B,$2C,$53,$54,$20
-	.byte $80,$D0,$60,$70,$50,$40,$90
+	.byte $52,$03,$04,$2B,$2C,$53,$54
+table_6793:
+	.byte $20,$80,$D0,$60,$70,$50,$40,$90
 
 L_JSR_679B_108F:
 L_JSR_679B_1777:
@@ -9447,16 +9580,28 @@ L_JSR_679B_7C45:
 	adc #$01
 	rts
 
-// 67A7
-	.byte $00,$40,$95,$94,$12,$50,$D0,$22
-	.byte $60,$E8,$28,$70,$F0,$F8,$05,$0A
-	.byte $0F,$14,$00,$20,$40,$60,$FA,$94
-	.byte $22,$95,$4A,$95,$72,$95,$9A,$95
+table_67A7:
+
+	.byte $00,$40,$95,$94
+table_67AB:
+	.byte $12,$50,$D0,$22
+	.byte $60,$E8,$28,$70,$F0,$F8
+table_67B5:
+	.byte $05,$0A,$0F,$14
+table_67B9:
+	.byte $00,$20,$40,$60
+table_67BD:
+	.byte $FA,$94,$22,$95
+
+	.byte $4A,$95,$72,$95,$9A,$95
 	.byte $C2,$95,$EA,$95,$12,$96,$3A,$96
 	.byte $62,$96,$8A,$96,$B2,$96,$DA,$96
 	.byte $02,$97,$2A,$97,$52,$97,$7A,$97
-	.byte $A2,$97,$CA,$97,$F2,$97,$1F,$1F
-	.byte $17,$0F,$07,$07,$AA,$BA,$AB,$8D
+	.byte $A2,$97,$CA,$97,$F2,$97
+table_67E5:
+	.byte $1F,$1F,$17,$0F,$07,$07
+table_67EB:
+	.byte $AA,$BA,$AB,$8D
 	.byte $35,$35,$D7,$F1,$AA,$FC,$C7,$51
 	.byte $55,$15,$C7,$73,$AA,$8A,$EA,$E8
 	.byte $70,$30,$5C,$4C,$AA,$CA,$8B,$AD
@@ -9468,34 +9613,40 @@ L_JSR_679B_7C45:
 	.byte $5C,$4C,$E7,$47,$AA,$AB,$AC,$AD
 	.byte $31,$3D,$D5,$D7,$AA,$FC,$C7,$51
 	.byte $55,$77,$54,$D5,$AA,$AE,$BB,$E2
-	.byte $C0,$30,$70,$5C,$D5,$D4,$D5,$F5
-	.byte $33,$35,$0F,$00,$5D,$5D,$77,$D7
-	.byte $54,$75,$45,$FF,$7C,$5C,$1C,$70
-	.byte $70,$70,$C0,$00,$D5,$D1,$D5,$35
-	.byte $34,$35,$0D,$03,$57,$55,$D3,$55
-	.byte $55,$D5,$53,$FC,$5C,$4C,$70,$70
-	.byte $70,$C0,$00,$00,$D5,$DD,$31,$35
-	.byte $0D,$0C,$03,$00,$C5,$5C,$55,$C7
-	.byte $55,$DD,$53,$FF,$77,$57,$5C,$0C
-	.byte $70,$70,$C0,$00,$D5,$C5,$D7,$31
-	.byte $3D,$0D,$0C,$03,$1C,$51,$17,$CD
-	.byte $75,$DC,$51,$FF,$4C,$5C,$70,$70
-	.byte $30,$C0,$C0,$00,$20,$30,$40,$50
-	.byte $60,$70,$80,$90,$A0,$B0,$C0,$D0
-	.byte $E0,$F0,$50,$60,$FB,$04,$F7,$08
-	.byte $EF,$10,$1A,$98,$38,$98,$56,$98
-	.byte $74,$98,$92,$98,$B0,$98,$CE,$98
-	.byte $EC,$98,$0A,$99,$28,$99,$46,$99
-	.byte $64,$99,$82,$99,$A0,$99,$BE,$99
-	.byte $A0,$99,$DC,$99,$FA,$99,$18,$9A
-	.byte $FA,$99,$36,$9A,$54,$9A,$72,$9A
-	.byte $54,$9A,$90,$9A,$AE,$9A,$CC,$9A
-	.byte $AE,$9A,$EA,$9A,$08,$9B,$26,$9B
-	.byte $44,$9B,$62,$9B,$80,$9B,$9E,$9B
-	.byte $BC,$9B,$DA,$9B,$F8,$9B,$16,$9C
-	.byte $34,$9C,$52,$9C,$70,$9C,$8E,$9C
-	.byte $BC,$9E,$DA,$9E,$F8,$9E,$16,$9F
-	.byte $34,$9F,$52,$9F,$B2,$8B,$B2,$8B
+	.byte $C0,$30,$70,$5C
+table_684B:
+	.byte $D5,$D4,$D5,$F5,$33,$35,$0F,$00
+	.byte $5D,$5D,$77,$D7,$54,$75,$45,$FF
+	.byte $7C,$5C,$1C,$70,$70,$70,$C0,$00
+	.byte $D5,$D1,$D5,$35,$34,$35,$0D,$03
+	.byte $57,$55,$D3,$55,$55,$D5,$53,$FC
+	.byte $5C,$4C,$70,$70,$70,$C0,$00,$00
+	.byte $D5,$DD,$31,$35,$0D,$0C,$03,$00
+	.byte $C5,$5C,$55,$C7,$55,$DD,$53,$FF
+	.byte $77,$57,$5C,$0C,$70,$70,$C0,$00
+	.byte $D5,$C5,$D7,$31,$3D,$0D,$0C,$03
+	.byte $1C,$51,$17,$CD,$75,$DC,$51,$FF
+	.byte $4C,$5C,$70,$70,$30,$C0,$C0,$00
+table_68AB:
+	.byte $20,$30,$40,$50,$60,$70,$80,$90
+	.byte $A0,$B0,$C0,$D0,$E0,$F0,$50,$60
+table_68BB:
+	.byte $FB,$04,$F7,$08,$EF,$10
+table_68C1:
+	.byte $1A,$98,$38,$98,$56,$98,$74,$98
+	.byte $92,$98,$B0,$98,$CE,$98,$EC,$98
+	.byte $0A,$99,$28,$99,$46,$99,$64,$99
+	.byte $82,$99,$A0,$99,$BE,$99,$A0,$99
+	.byte $DC,$99,$FA,$99,$18,$9A,$FA,$99
+	.byte $36,$9A,$54,$9A,$72,$9A,$54,$9A
+	.byte $90,$9A,$AE,$9A,$CC,$9A,$AE,$9A
+	.byte $EA,$9A,$08,$9B,$26,$9B,$44,$9B
+	.byte $62,$9B,$80,$9B,$9E,$9B,$BC,$9B
+	.byte $DA,$9B,$F8,$9B,$16,$9C,$34,$9C
+	.byte $52,$9C,$70,$9C,$8E,$9C,$BC,$9E
+	.byte $DA,$9E,$F8,$9E,$16,$9F,$34,$9F
+	.byte $52,$9F,$B2,$8B,$B2,$8B
+table_6927:	
 	.byte $01,$00,$0A,$00,$13,$00
 
 L_JSR_692D_0A83:
@@ -9520,7 +9671,7 @@ L_BRS_6938_6974:
 	ldy #$27
 	lda $BF8C,X
 	bmi L_BRS_696A_694F
-	sta $6967
+	sta v_6967
 	lda $E0
 	sec
 	sbc #$40
@@ -9534,7 +9685,7 @@ L_BRS_6963_6968:
 
 	sta ($E2),Y
 	dey
-	cpy #$00
+	cpy v_6967:#$00
 	bne L_BRS_6963_6968
 
 L_BRS_696A_694F:
@@ -9642,7 +9793,7 @@ L_BRS_69EE_6A30:
 	sta $05B0,Y
 	sta $05D0,Y
 	sta $05F0,Y
-	lda $6E77,Y
+	lda table_6E77,Y
 	ldx #$03
 	jsr L_JSR_6E5A_6A0E
 	lda #$14
@@ -9731,7 +9882,7 @@ L_BRS_6A7A_6A42:
 L_BRS_6A7C_6ACB:
 
 	sty $EF
-	ldx $6213,Y
+	ldx table_6213,Y
 
 L_BRS_6A81_6AC6:
 
@@ -9739,15 +9890,15 @@ L_BRS_6A81_6AC6:
 	beq L_BRS_6AC0_6A84
 	dec $0590,X
 	ldy $0510,X
-	lda $6D92,Y
+	lda table_6D92,Y
 	pha
-	lda $6D0E,Y
+	lda table_6D0E,Y
 	pha
 	stx $EA
-	lda $7E5A,X
+	lda table_7E5A,X
 	eor $29
 	tay
-	lda $7E4A,X
+	lda table_7E4A,X
 	sta $E0
 	sty $E1
 	clc
@@ -9821,9 +9972,9 @@ L_BRS_6AD4_6ACF:
 	lsr
 	lsr
 	tax
-	lda $6E85,X
+	lda table_6E85,X
 	tax
-	lda $6E77,Y
+	lda table_6E77,Y
 	sec
 	sbc #$01
 	jsr L_JSR_6E5A_6AE9
@@ -9841,37 +9992,37 @@ L_BRS_6AD4_6ACF:
 	asl
 	adc #$1E
 	tax
-	lda $667B,X
-	sta $6B31
-	lda $667C,X
-	sta $6B32
-	lda $66A9,X
-	sta $6B3A
-	lda $66AA,X
-	sta $6B3B
-	lda $66D7,X
-	sta $6B43
-	lda $66D8,X
-	sta $6B44
+	lda table_667B,X
+	sta v_6b31
+	lda table_667B + 1,X
+	sta v_6b31 + 1
+	lda table_66A9,X
+	sta v_6B3A
+	lda table_66A9 + 1,X
+	sta v_6B3A + 1
+	lda table_66D7,X
+	sta v_6B43
+	lda table_66D7 + 1,X
+	sta v_6B43 + 1
 	ldy #$27
 
 L_BRS_6B30_6B4C:
 
-	lda $F000,Y
+	lda v_6b31:$F000,Y
 	beq L_BRS_6B39_6B33
 	ora ($E0),Y
 	sta ($E0),Y
 
 L_BRS_6B39_6B33:
 
-	lda $F000,Y
+	lda v_6B3A:$F000,Y
 	beq L_BRS_6B42_6B3C
 	ora ($E2),Y
 	sta ($E2),Y
 
 L_BRS_6B42_6B3C:
 
-	lda $F000,Y
+	lda v_6B43:$F000,Y
 	beq L_BRS_6B4B_6B45
 	ora ($E4),Y
 	sta ($E4),Y
@@ -9887,7 +10038,7 @@ L_BRS_6B4B_6B45:
 
 L_BRS_6B57_6B5D:
 
-	ldy $6784,X
+	ldy table_6784,X
 	sta ($E4),Y
 	dex
 	bpl L_BRS_6B57_6B5D
@@ -9930,7 +10081,7 @@ L_BRS_6B88_6B70:
 
 L_BRS_6B8F_6B98:
 
-	lda $6000,X
+	lda table_6000,X
 	sta ($E2),Y
 	iny
 	inx
@@ -9949,7 +10100,7 @@ L_BRS_6BA3_6B9D:
 	lsr
 	and #$03
 	tay
-	lda $6705,Y
+	lda table_6705,Y
 	bpl L_BRS_6BB8_6BAD
 
 L_BRS_6BAF_6BA1:
@@ -9958,24 +10109,24 @@ L_BRS_6BAF_6BA1:
 	lda $20
 	and #$06
 	clc
-	adc $6707,Y
+	adc table_6707,Y
 
 L_BRS_6BB8_6B86:
 L_BRS_6BB8_6BAD:
 
 	tax
-	lda $667B,X
-	sta $6BF0
-	lda $667C,X
-	sta $6BF1
-	lda $66A9,X
-	sta $6BF5
-	lda $66AA,X
-	sta $6BF6
-	lda $66D7,X
-	sta $6BFA
-	lda $66D8,X
-	sta $6BFB
+	lda table_667B,X
+	sta v_6BF0
+	lda table_667B + 1,X
+	sta v_6BF0 + 1
+	lda table_66A9,X
+	sta v_6BF5
+	lda table_66A9 + 1,X
+	sta v_6BF5 + 1
+	lda table_66D7,X
+	sta v_6BFA
+	lda table_66D7 + 1,X
+	sta v_6BFA + 1
 	ldy #$0C
 	lda #$E4
 	ldx #$00
@@ -9987,11 +10138,11 @@ L_BRS_6BB8_6BAD:
 
 L_BRS_6BEF_6BFF:
 
-	lda $F000,Y
+	lda v_6BF0:$F000,Y
 	sta ($E4),Y
-	lda $F000,Y
+	lda v_6BF5:$F000,Y
 	sta ($E6),Y
-	lda $F000,Y
+	lda v_6BFA:$F000,Y
 	sta ($E8),Y
 	dey
 	bpl L_BRS_6BEF_6BFF
@@ -10002,7 +10153,7 @@ L_BRS_6BEF_6BFF:
 
 L_BRS_6C0A_6C10:
 
-	ldy $6784,X
+	ldy table_6784,X
 	sta ($E4),Y
 	dex
 	bpl L_BRS_6C0A_6C10
@@ -10061,12 +10212,12 @@ L_BRS_6C55_6C60:
 	jmp L_JMP_6AC0_6C62
 	lda $E0
 	ldy $E1
-	sta $6CA6
-	sty $6CA7
+	sta v_6CA6
+	sty v_6CA6 + 1
 	lda $E2
 	ldy $E3
-	sta $6CAC
-	sty $6CAD
+	sta v_6CAC
+	sty v_6CAC + 1
 	clc
 	adc #$40
 	iny
@@ -10076,8 +10227,8 @@ L_BRS_6C55_6C60:
 
 L_BRS_6C81_6C7D:
 
-	sta $6CB2
-	sty $6CB3
+	sta v_6CB2
+	sty v_6CB2 + 1
 	adc #$40
 	iny
 	bcc L_BRS_6C8E_6C8A
@@ -10086,8 +10237,8 @@ L_BRS_6C81_6C7D:
 
 L_BRS_6C8E_6C8A:
 
-	sta $6CB8
-	sty $6CB9
+	sta v_6CB8
+	sty v_6CB8 + 1
 	adc #$40
 	iny
 	bcc L_BRS_6C9A_6C97
@@ -10095,37 +10246,40 @@ L_BRS_6C8E_6C8A:
 
 L_BRS_6C9A_6C97:
 
-	sta $6CBE
-	sty $6CBF
+	sta v_6CBE
+	sty v_6CBE + 1
 	ldy #$17
 
 L_BRS_6CA2_6CC1:
 
 	lda $88FA,Y
-	sta $F000,Y
+	sta v_6CA6:$F000,Y
 	lda $8912,Y
-	sta $F000,Y
+	sta v_6CAC:$F000,Y
 	lda $892A,Y
-	sta $F000,Y
+	sta v_6CB2:$F000,Y
 	lda $8942,Y
-	sta $F000,Y
+	sta v_6CB8:$F000,Y
 	lda $895A,Y
-	sta $F000,Y
+	sta v_6CBE:$F000,Y
 	dey
 	bpl L_BRS_6CA2_6CC1
 	jmp L_JMP_6AC0_6CC3
 	lda #$17
-	bit $2FA9
-	bit $47A9
-	bit $5FA9
+	.byte $2C
+	lda #$2F
+	.byte $2C
+	lda #$47
+	.byte $2C
+	lda #$5F
 	stx $EB
 	tax
 
 L_BRS_6CD4_6CE0:
 
-	lda $67EB,X
+	lda table_67EB,X
 	sta ($E0),Y
-	lda $684B,X
+	lda table_684B,X
 	sta ($E2),Y
 	dex
 	dey
@@ -10136,13 +10290,13 @@ L_BRS_6CD4_6CE0:
 	lda ($46),Y
 	and #$0F
 	tay
-	lda $68AB,Y
+	lda table_68AB,Y
 	ora $0E
 	ldx #$05
 
 L_BRS_6CF5_6CFB:
 
-	ldy $6784,X
+	ldy table_6784,X
 	sta ($E4),Y
 	dex
 	bpl L_BRS_6CF5_6CFB
@@ -10161,7 +10315,7 @@ L_BRS_6D04_6D09:
 	bpl L_BRS_6D04_6D09
 	jmp L_JMP_6AC0_6D0B
 
-// 6D0E
+table_6D0E:
 
 	.byte $01,$02,$F3,$7C,$00,$4F,$5E,$6D
 	.byte $00,$0F,$1F,$2F,$00,$3F,$D3,$E3
@@ -10215,15 +10369,19 @@ L_BRS_6D7D_6D87:
 
 // 6D8C
 
-	.byte $00,$00,$00,$65,$65,$65,$6D,$6E
+	.byte $00,$00,$00,$65,$65,$65
+table_6D92:
+	.byte $6D,$6E
 	.byte $6D,$6D,$00,$6D,$6D,$6D,$00,$67
 	.byte $67,$67,$00,$67,$6D,$6D,$00,$6C
 	.byte $6C,$6C,$00,$6C,$6C,$6C,$00,$6C
 	.byte $6C,$6C,$00,$6C,$6C,$6C,$00,$6C
 	.byte $6C,$7D,$00,$6B,$00,$00,$00,$00
 	.byte $00,$00,$00,$00,$00,$00,$00,$00
+	.byte $00,$00,$00,$00,$00
+table_6DC9:	// true table start = $6E89
 	.byte $00,$00,$00,$00,$00,$00,$00,$00
-	.byte $00,$00,$00,$00,$00,$00,$00,$6C
+	.byte $00,$00,$6C
 
 L_BRS_6DD4_6DDF:
 
@@ -10243,6 +10401,7 @@ L_BRS_6DE4_6DEF:
 	sta ($E2),Y
 	dey
 	bpl L_BRS_6DE4_6DEF
+table_6DF1:	// true table start = $6EB1
 	jmp L_JMP_6AC0_6DF1
 
 L_BRS_6DF4_6DFE:
@@ -10330,14 +10489,14 @@ L_JSR_6E5C_0F2A:
 
 	asl
 	and #$F8
-	ldy $60FB,X
+	ldy table_60FB,X
 	bcc L_BRS_6E66_6E62
 	iny
 	clc
 
 L_BRS_6E66_6E62:
 
-	adc $60E2,X
+	adc table_60E2,X
 	sta $E0
 	tya
 	adc $29
@@ -10345,29 +10504,47 @@ L_BRS_6E66_6E62:
 	sta $E1
 	rts
 
-// 6E73
+// 6E73:
 
-	.byte $06,$0B,$10,$15,$00,$02,$05,$08
-	.byte $0B,$0E,$11,$14,$17,$1A,$1D,$20
-	.byte $23,$26,$03,$08,$0D,$12,$40,$70
-	.byte $70,$70,$70,$40,$40,$40,$70,$70
-	.byte $70,$70,$70,$70,$40,$40,$40,$D0
+	.byte $06,$0B,$10,$15
+table_6E77:
+	.byte $00,$02,$05,$08,$0B,$0E,$11,$14
+	.byte $17,$1A,$1D,$20,$23,$26
+table_6E85:
+	.byte $03,$08,$0D,$12
+table_6E89:	// 6DC9
+	.byte $40,$70,$70,$70,$70,$40,$40,$40
+	.byte $70,$70,$70,$70,$70,$70,$40,$40
+	.byte $40,$D0,$D0,$D0,$D0,$D0,$D0,$D0
 	.byte $D0,$D0,$D0,$D0,$D0,$D0,$D0,$D0
-	.byte $D0,$D0,$D0,$D0,$D0,$D0,$40,$40
-	.byte $40,$10,$10,$10,$10,$40,$31,$31
-	.byte $59,$59,$81,$81,$A9,$A9,$E1,$78
-	.byte $69,$71,$6A,$56,$A1,$C8,$94,$55
+	.byte $40,$40,$40,$10,$10,$10,$10,$40
+table_6EB1:	// 6DF1
+
+	.byte $31,$31,$59,$59,$81,$81,$A9,$A9
+table_6EB9:
+	.byte $E1,$78,$69,$71,$6A,$56,$A1,$C8
+	.byte $94,$55
+table_6EC3:
 	.byte $51,$78,$65,$41,$6A,$55,$61,$C8
-	.byte $95,$55,$32,$13,$67,$5A,$79,$3A
-	.byte $49,$36,$26,$44,$04,$04,$01,$09
-	.byte $05,$01,$0C,$05,$01,$01,$24,$4C
-	.byte $74,$9C,$30,$9C,$DC,$30,$9C,$DC
-	.byte $30,$9C,$DC,$E9,$79,$76,$73,$79
-	.byte $76,$73,$79,$76,$73,$72,$00,$D3
-	.byte $C3,$CF,$D2,$C5,$D3,$A0,$A0,$A0
-	.byte $C6,$C9,$CE,$C1,$CC,$BE,$BC,$C8
-	.byte $C9,$C7,$C8,$A0,$D8,$BD,$C8,$BC
-	.byte $C8,$BC
+	.byte $95,$55
+table_6ECD:
+	.byte $32,$13,$67,$5A,$79,$3A,$49,$36
+	.byte $26,$44
+table_6ED7:
+	.byte $04,$04,$01,$09,$05,$01,$0C,$05
+	.byte $01,$01
+table_6EE1:
+	.byte $24,$4C,$74,$9C
+table_6EE5:
+	.byte $30,$9C,$DC,$30,$9C,$DC,$30,$9C
+	.byte $DC,$E9
+table_6EEF:
+	.byte $79,$76,$73,$79,$76,$73,$79,$76
+	.byte $73,$72,$00,$D3,$C3,$CF,$D2,$C5
+	.byte $D3,$A0,$A0,$A0,$C6,$C9,$CE,$C1
+	.byte $CC,$BE,$BC,$C8,$C9,$C7,$C8,$A0
+table_6F0F:
+	.byte $D8,$BD,$C8,$BC,$C8,$BC
 
 L_JMP_6F15_6ABD:
 
@@ -10377,7 +10554,7 @@ L_JMP_6F15_6ABD:
 
 L_BRS_6F1C_6F26:
 
-	lda $7DC2,Y
+	lda table_7DC2,Y
 	sta ($E0),Y
 	lda #$00
 	sta ($E2),Y
@@ -10657,8 +10834,10 @@ L_BRS_7106_70F8:
 
 // 7107
 
-	.byte $AF,$B0,$00,$0B,$17,$23,$2F,$3B
-	.byte $47,$53,$5F,$6B,$77,$83,$8F
+	.byte $AF,$B0
+table_7109:
+	.byte $00,$0B,$17,$23,$2F,$3B,$47,$53
+	.byte $5F,$6B,$77,$83,$8F
 
 L_JSR_7116_1962:
 L_JSR_7116_51FE:
@@ -10689,7 +10868,7 @@ L_BRS_7124_711E:
 	lsr
 	lsr
 	tay
-	lda $6EB1,Y
+	lda table_6EB1,Y
 	sta $7D,X
 	ldy $E0
 	lda ($46),Y
@@ -10791,7 +10970,7 @@ L_JSR_71A9_0F98:
 
 L_BRS_71AF_71B8:
 
-	lda $6000,X
+	lda table_6000,X
 	sta ($E0),Y
 	inx
 	iny
@@ -10802,7 +10981,7 @@ L_BRS_71AF_71B8:
 L_BRS_71BC_71A2:
 L_BRS_71BC_71C5:
 
-	lda $6000,X
+	lda table_6000,X
 	sta ($E2),Y
 	inx
 	iny
@@ -10921,8 +11100,8 @@ L_JSR_722D_0BA3:
 L_JSR_723B_34DD:
 
 	ldy $CE
-	ldx $6EEF,Y
-	lda $6EE5,Y
+	ldx table_6EEF,Y
+	lda table_6EE5,Y
 	ldy #$24
 	jsr L_JSR_660C_7245
 	jsr L_JSR_6200_7248
@@ -10982,30 +11161,30 @@ L_BRS_7273_7299:
 	ldy #$E0
 	jsr L_JSR_660C_72AA
 	ldx $CE
-	lda $6EB9,X
+	lda table_6EB9,X
 	sta $EA
-	lda $6EC3,X
+	lda table_6EC3,X
 	sta $EB
-	lda $6ECD,X
+	lda table_6ECD,X
 	sta $EC
-	ldy $6ED7,X
+	ldy table_6ED7,X
 	ldx #$27
 
 L_BRS_72C3_72E6:
 
 	lda $EA
-	sta $8000,X
+	sta RAM8000,X
 	sta $C000,X
 	lda $EB
-	sta $8028,X
+	sta RAM8000 + $28,X
 	sta $C028,X
 	lda $EC
-	sta $8050,X
+	sta RAM8000 + $50,X
 	sta $C050,X
 	tya
-	sta $D800,X
-	sta $D828,X
-	sta $D850,X
+	sta COLRAM + $00,X
+	sta COLRAM + $28,X
+	sta COLRAM + $50,X
 	dex
 	bpl L_BRS_72C3_72E6
 	rts
@@ -11339,7 +11518,7 @@ L_BRS_7C37_7C2E:
 L_JMP_7C38_0816:
 L_JSR_7C38_1B2E:
 
-	sta $7C72
+	sta v_7C72
 	lda #$00
 	sta $EE
 	stx $EC
@@ -11376,9 +11555,9 @@ L_BRS_7C45_7C6C:
 L_BRS_7C6E_7C65:
 
 	lda $0510,X
-	ora #$00
+	ora v_7C72:#$00
 	sta $0510,X
-	lda $7C72
+	lda v_7C72
 	cmp #$10
 	bne L_BRS_7C88_7C7B
 	jsr L_JSR_6200_7C7D
@@ -11399,14 +11578,31 @@ L_BRS_7C90_7C4A:
 
 // 7C91
 
-	.byte $70,$70,$70,$70,$03,$0B,$13,$04
+	.byte $70,$70,$70,$70
+table_7C95:
+	.byte $03,$0B,$13,$04
 	.byte $0C,$14,$05,$0D,$15,$06,$0E,$16
 	.byte $07,$0F,$17,$18,$20,$28,$19,$21
 	.byte $29,$1A,$22,$2A,$1B,$23,$2B,$1C
-	.byte $24,$2C,$1D,$25,$2D,$25,$27,$26
-	.byte $22,$20,$22,$06,$04,$06,$04,$00
-	.byte $04,$50,$50,$60,$50,$00,$90,$01
-	.byte $00,$06,$08,$12,$00,$00,$00,$00
+	.byte $24,$2C,$1D,$25,$2D
+table_7CB6:
+	.byte $25,$27,$26
+table_7CB9:
+	.byte $22,$20,$22
+table_7CBC:
+	.byte $06,$04,$06
+table_7CBF:
+	.byte $04,$00,$04
+table_7CC2:
+	.byte $50,$50,$60,$50
+table_7CC6:
+	.byte $00,$90,$01,$00
+table_7CCA:
+	.byte $06,$08
+table_7CCC:
+	.byte $12
+table_7CCD:
+	.byte $00,$00,$00,$00
 	.byte $00,$10,$10,$10,$00,$00,$30,$30
 	.byte $30,$00,$00,$50,$50,$50,$00,$00
 	.byte $70,$70,$70
@@ -11448,7 +11644,7 @@ L_BRS_7CFF_7CF8:
 	tay
 	lda $4E,X
 	sec
-	sbc $6EE1,Y
+	sbc table_6EE1,Y
 	bmi L_BRS_7D30_7D0D
 	cmp #$06
 	bcs L_BRS_7D30_7D11
@@ -11462,7 +11658,7 @@ L_BRS_7CFF_7CF8:
 	lda #$05
 	sta $5B,X
 	ldy $E2
-	lda $6EE1,Y
+	lda table_6EE1,Y
 	sec
 	sbc #$01
 	sta $4E,X
@@ -11487,7 +11683,7 @@ L_JSR_7D35_11DA:
 
 L_BRS_7D3C_7D52:
 
-	lda $6114,X
+	lda table_6114,X
 	sta D1PRA                          // Data Port A (Keyboard, Joystick, Paddles)
 
 L_BRS_7D42_7D48:
@@ -11495,7 +11691,7 @@ L_BRS_7D42_7D48:
 	lda D1PRB                          // Data Port B (Keyboard, Joystick, Paddles)
 	cmp D1PRB                          // Data Port B (Keyboard, Joystick, Paddles)
 	bne L_BRS_7D42_7D48
-	and $611C,X
+	and table_611C,X
 	cmp #$01
 	ror $14
 	dex
@@ -11558,7 +11754,9 @@ L_BRS_7D8A_7D95:
 	.byte $00,$6C,$6C,$6C,$00,$6C,$6C,$6C
 	.byte $00,$6C,$6C,$6C,$00,$6C,$6C,$6C
 	.byte $00,$6C,$6C,$7D,$00,$6B,$00,$00
+table_7DBA:
 	.byte $10,$1D,$30,$3D,$50,$5D,$70,$7D
+table_7DC2:
 	.byte $AA,$AB,$8A,$20,$00,$00,$00,$00
 	.byte $AA,$0E,$AA,$22,$00,$00,$00,$00
 
@@ -11587,7 +11785,7 @@ L_JMP_7DD2_7090:
 
 L_BRS_7DF9_7DF5:
 
-	sta $64AD
+	sta v_64AD
 	rts
 
 L_JSR_7DFD_7DE2:
@@ -11651,10 +11849,10 @@ L_BRS_7E46_7E33:
 	bpl L_BRS_7E2B_7E47
 	rts
 
-// 7E4A
-
+table_7E4A:
 	.byte $80,$90,$A8,$C0,$D8,$F0,$08,$20
 	.byte $38,$50,$68,$80,$98,$B0,$00,$00
+table_7E5A:
 	.byte $A7,$A7,$A7,$A7,$A7,$A7,$A8,$A8
 	.byte $A8,$A8,$A8,$A8,$A8,$A8,$20,$20
 	.byte $C0,$D0,$E8,$00,$18,$30,$48,$60
