@@ -1,3 +1,4 @@
+// KERNAL
 .label ACPTR	= $FFA5             // 65445	Input byte from serial port
 .label CHKIN	= $FFC6             // 65478	Open channel for input
 .label CHKOUT	= $FFC9             // 65481	Open a channel for output
@@ -89,6 +90,38 @@
 .label SP5COL       = $D02C
 .label SP6COL       = $D02D
 .label SP7COL       = $D02E
+// Sprite data lie at address MEM(Start of screen mem + $03F8 + sprite number)*64
+// The start of the Screen RAM (the VIC bank) is set by $DD00 (see CIA 2) and $D018.
+// $DD00	Bit 0..1: Select the position of the VIC-memory
+// %00, 0: Bank 3: $C000-$FFFF, 49152-65535
+// %01, 1: Bank 2: $8000-$BFFF, 32768-49151
+// %10, 2: Bank 1: $4000-$7FFF, 16384-32767
+// %11, 3: Bank 0: $0000-$3FFF, 0-16383 (standard)
+// $D018
+//        lda #$0f
+//        and $d018
+//        ora #$(A) 
+
+//   A	Start address of screen RAM
+//   0	    0 ($0000)
+//  10	 1024 ($0400) default
+//  20	 2048 ($0800)
+//  30	 3072 ($0C00)
+//  40	 4096 ($1000)
+//  50	 5120 ($1400)
+//  60	 6144 ($1800)
+//  70	 7168 ($1C00)
+//  80	 8192 ($2000)
+//  90	 9216 ($2400)
+//  a0	10240 ($2800)
+//  b0	11264 ($2C00)
+//  c0	12288 ($3000)
+//  d0	13312 ($3400)
+//  e0	14336 ($3800)
+//  f0	15360 ($3C00)
+
+
+
 // SID CHIP $D400
 .label FRELO1       = $D400
 .label FREHI1       = $D401
@@ -154,7 +187,7 @@
 .label D2CRA        = $DD0E
 .label D2CRB        = $DD0F
 
-// #####################################
+//########## DINO_LABELS ##########
 
 .label v_1D95       = $1D95
 .label v_2BC0       = $2BC0
@@ -170,6 +203,8 @@
 .label v_6526       = $6526
 .label v_652C       = $652c
 .label v_6530       = $6530
+
+
 
 .label RAM8000      = $8000
 .label RAM8400      = $8400

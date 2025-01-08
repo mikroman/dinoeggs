@@ -1,19 +1,22 @@
+// [ ][$][0-z][0-z][0-z]	// search for " $<hex><hex><hex>"
 // project created by mikroman
 // June 18,2024
-// [ ][$][0-z][0-z][0-z]
 .import source "dino_labels.asm"
-#define no_error		// comment this line for read_error build
-//#define read_error	// uncomment this line for read_error build
 
-#if read_error
-BasicUpstart2(error)	// SYS2064 ($0810)
+// ########################### BUILD OPTIONS #################################
+#define no_error_build	// comment this line for read_error_build
+//#define read_error_build	// comment this line for no_error_build
+// ###########################################################################
 
-#elif no_error
-BasicUpstart2(start)	// SYS2178 ($0882)
+	#if read_error_build
+	BasicUpstart2(error)	// SYS2064 ($0810)
+
+	#elif no_error_build
+	BasicUpstart2(start)	// SYS2178 ($0882)
 
 #endif
 
-* = $0810 "read_error"
+* = $0810 "read_error_build"
 
 error:
 
@@ -35,12 +38,12 @@ L_JMP_0819_0810:	// Disk protection check
 
 	jsr CLALL			// Close All Channels And Files
 	lda #$00
-	jsr SETNAM		// Set Filename
+	jsr SETNAM		// Set Filename - null, here.
 	lda #$0F
 	ldx #$08
 	ldy #$0F
 	jsr SETLFS		// Set Logical File Parameters
-	jsr OPEN			// Open Channel
+	jsr OPEN			// Open Channel - In this case; the command channel, 15
 	lda #$01
 	ldx #$96
 	ldy #$1D
@@ -91,7 +94,9 @@ L_BRS_0872_0876:
 	lda #$0F
 	jsr CLOSE                         // Close Vector
 
-start:	// 10 SYS2178 entry: skip disk error check
+*=$0882 "no_error_build"
+start:	
+	// 10 SYS2178 entry: skip disk error check
 
 	sei
 	ldx #$1E
@@ -120,7 +125,7 @@ L_BRS_0890_089D:	// prep CIA1 and CIA2
 	sta NMI_vector                          // Vector: NMI
 	lda #$1C
 	sta NMI_vector + 1
-	lda #$95
+	lda #$95	// VIC BANK2 $8000
 	sta D2PRA                          // Data Port A (Serial Bus, RS232, VIC Base Mem.)
 	sta $0203
 	lda #$19
@@ -324,9 +329,9 @@ L_BRS_09F3_09EE:
 	lda $BFFC,X
 	tax
 	dex
-	lda table_7CCD,X
+	lda REDQ,X
 	beq L_BRS_0A1F_0A00
-	ldy table_7CCC,X
+	ldy DINOSZ+2,X
 	beq L_BRS_0A1F_0A05
 	ldy $09
 	ora table_1C6A,Y
@@ -567,7 +572,7 @@ L_BRS_0B2B_0AF9:
 	sta VCREG1                          // Voice 1: Control Register
 	ldy $02D7
 	inc $02D7
-	lda table_7CCA,Y
+	lda DINOSZ,Y
 	pha
 	jsr L_JSR_722D_0B54
 	dey
@@ -674,9 +679,9 @@ L_BRS_0BD8_0BCC:
 	clc
 	adc #$20
 	ldy $54,X
-	cmp table_7CB6,Y
+	cmp CGWR,Y
 	bcs L_BRS_0BFA_0BF0
-	cmp table_7CB9,Y
+	cmp CGWL,Y
 	bcs L_BRS_0C3A_0BF5
 	lda #$00
 	.byte $2C
@@ -794,13 +799,13 @@ L_BRS_0C7D_0C78:
 	lda $71,X
 	bne L_BRS_0CA3_0C7F
 	ldy $54,X
-	lda table_7CBF,Y
+	lda BABW1,Y
 	pha
 	lda $4E,X
 	pha
 	jsr L_JSR_71FE_0C8A
 	sec
-	sbc table_7CBC,Y
+	sbc BABWD,Y
 	tax
 	pla
 	clc
@@ -1104,7 +1109,7 @@ L_BRS_0E26_0E1E:
 L_BRS_0E32_0E2B:
 
 	ldx $64,Y
-	lda table_7CCD,X
+	lda REDQ,X
 	sta $E8
 	lda $0060,Y
 	sty $EF
@@ -1128,7 +1133,7 @@ L_BRS_0E32_0E2B:
 	sec
 	sbc #$08
 	bcc L_BRS_0E6F_0E65
-	jsr L_JSR_7CE4_0E67
+	jsr GETIND
 	lda #$04
 	sta $0580,Y
 
@@ -1156,7 +1161,7 @@ L_BRS_0E78_0E88:
 	jsr L_JSR_6762_0E8C
 	ldx $EF
 	ldy $6C,X
-	lda table_7CC2,Y
+	lda FLSHCOL,Y
 	ora $0E
 	ldx #$05
 
@@ -1173,7 +1178,7 @@ L_JMP_0EA2_0E2F:
 	dec $68,X
 	bne L_BRS_0EB9_0EA6
 	ldy $6C,X
-	lda table_7CC6,Y
+	lda FLSHSC,Y
 	beq L_BRS_0EB9_0EAD
 	ldy $64,X
 	pha
@@ -1233,11 +1238,11 @@ L_BRS_0EE5_0EDD:
 	bcs L_BRS_0EC5_0EEC
 	ldx $0237,Y
 	bmi L_BRS_0F24_0EF1
-	lda table_7CCD,X
+	lda REDQ,X
 	sta $E8
 	beq L_BRS_0F0A_0EF8
 	lda $020F,Y
-	jsr L_JSR_7CE4_0EFD
+	jsr GETIND
 	lda #$04
 	sta $0580,Y
 	ldy $EF
@@ -1687,7 +1692,7 @@ L_BRS_116A_1161:
 	and #$01
 	tax
 	lda table_67A7 + 2,X
-	sta $0203
+	sta $0203			// flip between VIC BANKs 2 and 3 $8000,$C000
 	ldy $0400
 	cpy #$FF
 	beq L_BRS_1189_117A
@@ -1725,7 +1730,7 @@ L_BRS_11AB_11A7:
 
 L_BRS_11B0_119D:
 
-	jsr L_JSR_7D35_11B0
+	jsr SCON
 
 L_JMP_11B3_11AD:
 
@@ -1752,7 +1757,7 @@ L_BRS_11CA_11CD:
 
 L_BRS_11DA_11E1:
 
-	jsr L_JSR_7D35_11DA
+	jsr SCON
 	lda $14
 	and #$04
 	beq L_BRS_11DA_11E1
@@ -2675,7 +2680,7 @@ L_BRS_1674_16AB:
 
 L_BRS_1692_16A9:
 
-	lda table_7C95,X
+	lda CONV,X
 	stx $EF
 	tax
 	lda $0700,X
@@ -3925,13 +3930,16 @@ L_JSR_1D7D_0CEB:
 
 // 1D95
 
-	.byte $00,$23
+	.byte $00,$23			// 0,[$]
 
 BlockRead:	// 1D97
 
-	.byte $55,$31,$3A,$35,$2C,$30		// U1:5,0	channel,drive
-	.byte $2C,$31,$38,$2C,$31,$38,$2C,$31	// ,18,18,1	t,s=18,18
-	.byte $38,$FF,$7D,$06,$05,$20,$A7,$04	// 8
+	.byte $55,$31,$3A,$35,$2C,$30,$2C	// disk command <U1:channel,drive,t,s>
+	.byte $31,$38,$2C,$31,$38		// "U1:5,0,18,18"
+
+	.byte $2C,$31,$38			// 1DA3
+
+	.byte $FF,$7D,$06,$05,$20,$A7,$04	// 1DA6
 	.byte $EF,$00,$5F,$25,$FF,$0E,$00,$04
 	.byte $FF,$04,$DF,$B5,$5E,$91,$B5,$2F
 	.byte $7F,$0F,$95,$45,$FD,$07,$BD,$04
@@ -6474,7 +6482,7 @@ L_BRS_447C_443D:
 	sta RASTER                          // Raster Position
 	lda #$08
 	sta SCROLX                          // Control Register 2
-	lda #$95
+	lda #$95	// VIC BANK2 $8000
 	sta D2PRA                          // Data Port A (Serial Bus, RS232, VIC Base Mem.)
 
 L_JMP_448B_4468:
@@ -8654,7 +8662,7 @@ IRQ_607F:
 	beq L_BRS_60A2_6089
 	lda #$18
 	sta SCROLX                          // Control Register 2
-	lda $0203
+	lda $0203	// VIC BANK X $8000
 	sta D2PRA                          // Data Port A (Serial Bus, RS232, VIC Base Mem.)
 	lda #$3B
 	sta SCROLY                          // Control Register 1
@@ -8668,7 +8676,7 @@ L_BRS_60A2_6089:
 	sta RASTER                          // Raster Position
 	lda #$08
 	sta SCROLX                          // Control Register 2
-	lda #$95
+	lda #$95	// VIC BANK2 $8000
 	sta D2PRA                          // Data Port A (Serial Bus, RS232, VIC Base Mem.)
 	inc $0201
 
@@ -11518,108 +11526,103 @@ L_BRS_7C37_7C2E:
 L_JMP_7C38_0816:
 L_JSR_7C38_1B2E:
 
-	sta v_7C72
+	sta ITEM+1
+
 	lda #$00
 	sta $EE
 	stx $EC
 
-L_BRS_7C41_7C8E:
+SPRLB:
 
 	lda #$14
 	sta $EB
-
-L_BRS_7C45_7C54:
-L_BRS_7C45_7C59:
-L_BRS_7C45_7C60:
-L_BRS_7C45_7C6C:
+// (below)THIS SECTION OF CODE IS STORED IN ORIGINAL ASSEMBLY AND HAS BEEN USED TO PROVIDE SOME LABELS
+SPRL:
 
 	jsr L_JSR_679B_7C45
 	dec $EB
 	bmi L_BRS_7C90_7C4A
 	ora $ED
 	tax
-	lda $0510,X
+	lda $0510,X	//ss+16
 	and #$FC
-	bne L_BRS_7C45_7C54
-	lda $0500,X
-	bne L_BRS_7C45_7C59
-	lda $0510,X
+	bne SPRL
+	lda $0500,X	//ss,x
+	bne SPRL
+	lda $0510,X	//ss+16,x
 	and #$03
-	beq L_BRS_7C45_7C60
-	lda $0580,X
-	bne L_BRS_7C6E_7C65
-	jsr L_JSR_6200_7C67
+	beq SPRL
+	lda $0580,X	//redraw,X
+	bne DOIT
+	jsr L_JSR_6200_7C67	//JSR rm
 	and #$06
-	bne L_BRS_7C45_7C6C
+	bne SPRL
 
-L_BRS_7C6E_7C65:
+DOIT:
 
-	lda $0510,X
-	ora v_7C72:#$00
-	sta $0510,X
-	lda v_7C72
+	lda $0510,X	//ss+16,X
+ITEM:
+	ora #$00
+	sta $0510,X	//ss+16,X
+	lda ITEM+1
 	cmp #$10
-	bne L_BRS_7C88_7C7B
-	jsr L_JSR_6200_7C7D
+	bne SPRLD
+	jsr L_JSR_6200_7C7D// JSR rm
 	and #$0C
-	ora $0510,X
-	sta $0510,X
+	ora $0510,X	//ss+16,X
+	sta $0510,X	//ss+16,X
 
-L_BRS_7C88_7C7B:
+SPRLD:
 
-	inc $EE
-	lda $EE
-	cmp $EC
-	bne L_BRS_7C41_7C8E
+	inc $EE		// putemp
+	lda $EE		// putemp
+	cmp $EC		// T+12 (so T=$00D0)
+	bne SPRLB
 
 L_BRS_7C90_7C4A:
 
 	rts
 
-// 7C91
-
+SXCOL:
 	.byte $70,$70,$70,$70
-table_7C95:
-	.byte $03,$0B,$13,$04
-	.byte $0C,$14,$05,$0D,$15,$06,$0E,$16
-	.byte $07,$0F,$17,$18,$20,$28,$19,$21
-	.byte $29,$1A,$22,$2A,$1B,$23,$2B,$1C
-	.byte $24,$2C,$1D,$25,$2D
-table_7CB6:
-	.byte $25,$27,$26
-table_7CB9:
-	.byte $22,$20,$22
-table_7CBC:
-	.byte $06,$04,$06
-table_7CBF:
-	.byte $04,$00,$04
-table_7CC2:
-	.byte $50,$50,$60,$50
-table_7CC6:
-	.byte $00,$90,$01,$00
-table_7CCA:
-	.byte $06,$08
-table_7CCC:
-	.byte $12
-table_7CCD:
-	.byte $00,$00,$00,$00
-	.byte $00,$10,$10,$10,$00,$00,$30,$30
-	.byte $30,$00,$00,$50,$50,$50,$00,$00
-	.byte $70,$70,$70
+CONV:
+	.byte $03,$0B,$13,$04,$0C,$14,$05,$0D
+	.byte $15,$06,$0E,$16,$07,$0F,$17,$18
+	.byte $20,$28,$19,$21,$29,$1A,$22,$2A
+	.byte $1B,$23,$2B
+	
+	.byte $1C,$24,$2C,$1D,$25,$2D
 
-L_JSR_7CE4_0E67:
-L_JSR_7CE4_0EFD:
+CGWR:
+	.byte $25,$27,$26
+CGWL:
+	.byte $22,$20,$22
+BABWD:
+	.byte $06,$04,$06
+BABW1:
+	.byte $04,$00,$04
+FLSHCOL:
+	.byte $50,$50,$60,$50
+FLSHSC:
+	.byte $00,$90,$01,$00
+DINOSZ:
+	.byte $06,$08,$12
+REDQ:
+	.byte $00,$00,$00,$00,$00,$10,$10,$10
+	.byte $00,$00,$30,$30,$30,$00,$00,$50
+	.byte $50,$50,$00,$00,$70,$70,$70
+GETIND:
 
 	ldy #$00
 	sec
 
-L_BRS_7CE7_7CEA:
+GET2:
 
 	iny
 	sbc #$0C
-	bcs L_BRS_7CE7_7CEA
+	bcs GET2
 	tya
-	ora $E8
+	ora $E8	//T+8
 	tay
 	rts
 
@@ -11627,56 +11630,52 @@ L_JSR_7CF1_0B96:
 
 	tay
 	dey
-	lda $0097,Y
+	lda $0097,Y	//SPIDVD,Y
 	cmp #$01
-	bne L_BRS_7CFF_7CF8
-	lda $00AA,Y
-	beq L_BRS_7D34_7CFD
+	bne DROPPED
+	lda $00AA,Y	//SPIDDIE,Y
+	beq NR1
 
-L_BRS_7CFF_7CF8:
+DROPPED:
 
-	lda $5A,X
+	lda $5A,X		//BABIX,X
 	lsr
 	lsr
 	lsr
 	lsr
 	lsr
 	tay
-	lda $4E,X
+	lda $4E,X		//BABY,X
 	sec
-	sbc table_6EE1,Y
-	bmi L_BRS_7D30_7D0D
+	sbc table_6EE1,Y	//BUMP,Y
+	bmi DR6
 	cmp #$06
-	bcs L_BRS_7D30_7D11
-	sty $E2
-	ldy $5A,X
-	lda $0510,Y
+	bcs DR6
+	sty $E2		//T+2
+	ldy $5A,X		//BABIX,X
+	lda $0510,Y	//SS+16,Y
 	and #$03
-	beq L_BRS_7D30_7D1C
+	beq DR6
 	lda #$00
-	sta $72,X
+	sta $72,X		//BDHOLD,X
 	lda #$05
-	sta $5B,X
-	ldy $E2
-	lda table_6EE1,Y
+	sta $5B,X		//FAMB,X
+	ldy $E2		//T+2
+	lda table_6EE1,Y	//BUMP,Y
 	sec
 	sbc #$01
-	sta $4E,X
+	sta $4E,X		//BABY,X
 
-L_BRS_7D30_7D0D:
-L_BRS_7D30_7D11:
-L_BRS_7D30_7D1C:
+DR6:
+	inc $4E,X		//BABY,X
+	inc $4E,X		//BABY,X
 
-	inc $4E,X
-	inc $4E,X
-
-L_BRS_7D34_7CFD:
+NR1:
 
 	rts
 
-L_JSR_7D35_11B0:
-L_JSR_7D35_11DA:
-
+SCON:
+// (above)THIS SECTION OF CODE IS STORED IN ORIGINAL ASSEMBLY AND HAS BEEN USED TO PROVIDE SOME LABELS
 	lda #$FF
 	sta D1DDRA                          // Data Direction Register A
 	ldx #$07

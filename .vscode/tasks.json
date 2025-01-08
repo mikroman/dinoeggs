@@ -25,10 +25,10 @@
             }
         },
         {
-            "label": "C64debugger - build & launch",
+            "label": "RETROdebugger - build & launch",
             "type": "shell",
             "windows": {
-                "command": "\"C:\\Users\\Mike\\Desktop\\C64Debug\\C64Debugger-v0.64.58.6\\C64Debugger.exe\" -prg ${fileDirname}\\bin\\${fileBasenameNoExtension}.prg -d64 ${fileDirname}\\bin\\dinoeggs.d64 -debuginfo ${fileDirname}\\bin\\${fileBasenameNoExtension}.dbg -layout 11"
+                "command": "\"C:\\c64\\tools\\rdBUG\\RetroDebugger.exe\" ${fileDirname}\\bin\\${fileBasenameNoExtension}.prg"
             },
             "dependsOn": [
                 "Assemble"
